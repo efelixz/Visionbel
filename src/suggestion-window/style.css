@@ -1,0 +1,372 @@
+/* Reset e configurações base */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    backdrop-filter: blur(10px);
+}
+
+#container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.dark #container {
+    background: rgba(17, 24, 39, 0.95);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.2);
+}
+
+/* Header melhorado */
+header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    padding: 16px 20px;
+}
+
+header h1 {
+    color: white !important;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+header .w-8 {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+#closeBtn {
+    color: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#closeBtn:hover {
+    color: white !important;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Conteúdo das sugestões melhorado */
+#suggestions-content {
+    font-size: 14px;
+    line-height: 1.7;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    background: transparent;
+    padding: 20px;
+}
+
+/* Estilo para código melhorado */
+.code-block {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
+    overflow-x: auto;
+    white-space: pre;
+    margin: 16px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    position: relative;
+}
+
+.dark .code-block {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border: 1px solid #475569;
+    color: #e2e8f0;
+}
+
+.code-block::before {
+    content: 'CODE';
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #64748b;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.dark .code-block::before {
+    color: #94a3b8;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Estilo para texto normal melhorado */
+.suggestion-text {
+    color: #374151;
+    line-height: 1.7;
+    margin: 16px 0;
+    font-weight: 400;
+}
+
+.dark .suggestion-text {
+    color: #d1d5db;
+}
+
+/* Estilo para títulos melhorado */
+.suggestion-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin: 20px 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e5e7eb;
+    position: relative;
+}
+
+.dark .suggestion-title {
+    color: #f9fafb;
+    border-bottom-color: #374151;
+}
+
+.suggestion-title::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 1px;
+}
+
+/* Estilo para listas melhorado */
+.suggestion-list {
+    margin: 16px 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.suggestion-list li {
+    color: #374151;
+    position: relative;
+    padding: 8px 0 8px 24px;
+    margin: 8px 0;
+    background: rgba(99, 102, 241, 0.05);
+    border-radius: 8px;
+    padding: 12px 16px 12px 40px;
+    border-left: 3px solid #6366f1;
+    transition: all 0.2s ease;
+}
+
+.dark .suggestion-list li {
+    color: #d1d5db;
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.suggestion-list li:hover {
+    background: rgba(99, 102, 241, 0.1);
+    transform: translateX(4px);
+}
+
+.dark .suggestion-list li:hover {
+    background: rgba(99, 102, 241, 0.15);
+}
+
+.suggestion-list li::before {
+    content: '✓';
+    color: #6366f1;
+    font-weight: bold;
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+}
+
+/* Botões de ação melhorados */
+.action-button {
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.action-button:hover::before {
+    left: 100%;
+}
+
+.action-button.primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transform: translateY(0);
+}
+
+.action-button.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+}
+
+.action-button.secondary {
+    background: rgba(107, 114, 128, 0.1);
+    color: #374151;
+    border: 1px solid rgba(107, 114, 128, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.dark .action-button.secondary {
+    background: rgba(75, 85, 99, 0.2);
+    color: #d1d5db;
+    border: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.action-button.secondary:hover {
+    background: rgba(107, 114, 128, 0.2);
+    transform: translateY(-1px);
+}
+
+.dark .action-button.secondary:hover {
+    background: rgba(75, 85, 99, 0.3);
+}
+
+.action-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Footer melhorado */
+footer {
+    background: rgba(249, 250, 251, 0.8);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(229, 231, 235, 0.5);
+    padding: 16px 20px;
+}
+
+.dark footer {
+    background: rgba(17, 24, 39, 0.8);
+    border-top: 1px solid rgba(55, 65, 81, 0.5);
+}
+
+/* Animações melhoradas */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.fade-in {
+    animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.thinking {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Scrollbar personalizada melhorada */
+#suggestions-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+#suggestions-content::-webkit-scrollbar-track {
+    background: rgba(243, 244, 246, 0.5);
+    border-radius: 4px;
+}
+
+.dark #suggestions-content::-webkit-scrollbar-track {
+    background: rgba(31, 41, 55, 0.5);
+}
+
+#suggestions-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+#suggestions-content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    background-clip: content-box;
+}
+
+/* Responsividade melhorada */
+@media (max-width: 640px) {
+    #container {
+        font-size: 13px;
+        border-radius: 12px;
+    }
+    
+    .code-block {
+        font-size: 12px;
+        padding: 12px;
+    }
+    
+    header {
+        padding: 12px 16px;
+    }
+    
+    #suggestions-content {
+        padding: 16px;
+    }
+    
+    footer {
+        padding: 12px 16px;
+    }
+    
+    .suggestion-title {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .action-button {
+        font-size: 12px;
+        padding: 10px 16px;
+    }
+    
+    header h1 {
+        font-size: 16px;
+    }
+}

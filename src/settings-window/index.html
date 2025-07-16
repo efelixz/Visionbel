@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Configurações - SkillVision™</title>
+    <link rel="stylesheet" href="../styles/output.css">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans antialiased transition-colors duration-300 min-h-screen">
+    
+    <div class="min-h-screen p-4 sm:p-6 lg:p-8">
+        <div class="max-w-6xl mx-auto">
+            <!-- Header Clean -->
+            <header class="mb-6 lg:mb-8">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-blue-600 dark:bg-blue-500 rounded-xl flex items-center justify-center">
+                        <span class="text-white font-semibold text-xl">⚙️</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
+                            Configurações
+                        </h1>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Personalize o comportamento do sistema</p>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Configuração do Modo Padrão -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 lg:p-8 mb-6 lg:mb-8 transition-colors duration-300 shadow-sm">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 lg:mb-6">
+                    🎯 Modo de Operação Padrão
+                </h2>
+                
+                <div class="">
+                    <label for="default-mode-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Selecione o modo padrão:</label>
+                    <div class="relative">
+                        <select id="default-mode-select" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 appearance-none">
+                            <option value="destaque" class="bg-white dark:bg-gray-700">✨ Destaque Inteligente</option>
+                            <option value="sugestao" class="bg-white dark:bg-gray-700">💡 Sugestões</option>
+                            <option value="autocorrecao" class="bg-white dark:bg-gray-700">🤖 AutoCorreção de Código</option>
+                            <option value="directo" class="bg-white dark:bg-gray-700">🎯 Resposta Direta</option>
+                            <option value="etico" class="bg-white dark:bg-gray-700">🛡️ Modo Ético</option>
+                            <option value="shadow" class="bg-white dark:bg-gray-700">👤 Modo Shadow</option>
+                        </select>
+                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Editor de Comportamento da IA -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 lg:p-8 transition-colors duration-300 shadow-sm">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 lg:mb-6">
+                    🤖 Editor de Comportamento
+                </h2>
+                
+                <div class=" space-y-4 lg:space-y-6">
+                    <div>
+                        <label for="mode-prompt-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Modo para edição:</label>
+                        <div class="relative">
+                            <select id="mode-prompt-select" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 appearance-none">
+                                <option value="destaque" class="bg-white dark:bg-gray-700">✨ Destaque Inteligente</option>
+                                <option value="sugestao" class="bg-white dark:bg-gray-700">💡 Sugestões</option>
+                                <option value="autocorrecao" class="bg-white dark:bg-gray-700">🤖 AutoCorreção</option>
+                                <option value="etico" class="bg-white dark:bg-gray-700">🛡️ Modo Ético</option>
+                                <option value="directo" class="bg-white dark:bg-gray-700">🎯 Resposta Direta</option>
+                            </select>
+                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                <svg class="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="prompt-editor" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Prompt personalizado:</label>
+                        <div class="relative">
+                            <textarea id="prompt-editor" rows="12" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 resize-none" placeholder="Digite o prompt personalizado aqui...\nExemplo: Você é um assistente especializado em..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group flex flex-col sm:flex-row gap-3 sm:gap-4">
+                        <button id="savePromptBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2">
+                            <span>💾</span>
+                            Salvar Configuração
+                        </button>
+                        <button id="resetPromptBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2">
+                            <span>🔄</span>
+                            Resetar Padrão
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="renderer.js"></script>
+    <script>
+        // Theme Toggle Functionality
+        const html = document.documentElement;
+        
+        // MODIFICADO: Check for saved theme preference or default to DARK mode
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'dark') {
+            html.classList.add('dark');
+        } else {
+            html.classList.remove('dark');
+        }
+        
+        // Listen for theme changes from main window
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'theme') {
+                if (e.newValue === 'dark') {
+                    html.classList.add('dark');
+                } else {
+                    html.classList.remove('dark');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

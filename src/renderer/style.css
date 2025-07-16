@@ -1,0 +1,85 @@
+body { 
+    font-family: sans-serif; 
+    background-color: #f0f2f5; 
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+html {
+    height: 100%;
+    overflow: hidden;
+}
+
+h1, h2, h3 { color: #333; }
+button { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; background-color: #007bff; color: white; border-radius: 5px; }
+button:hover { background-color: #0056b3; }
+hr { margin: 20px 0; }
+.results-container { display: flex; gap: 20px; }
+.image-container, .text-container, .ai-container { flex: 1; background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+pre { white-space: pre-wrap; word-wrap: break-word; font-family: monospace; }
+
+.mode-selector {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+}
+
+.mode-selector label {
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+/* Responsividade adicional */
+@media (max-height: 600px) {
+    .h-full {
+        padding: 0.5rem !important;
+    }
+    
+    main {
+        padding: 0.75rem !important;
+    }
+    
+    .grid {
+        gap: 0.5rem !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    label {
+        padding: 0.5rem !important;
+    }
+}
+
+@media (max-width: 1024px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .h-full {
+        padding: 0.25rem !important;
+    }
+    
+    main {
+        padding: 0.5rem !important;
+    }
+}
+
+/* Estilo específico para o modo Raciocínio Profundo */
+.mode-raciocinio {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.mode-raciocinio:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}

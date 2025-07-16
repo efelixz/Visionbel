@@ -1,0 +1,46 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    /* Permite que a janela seja arrastada pela sua área transparente */
+    -webkit-app-region: drag;
+    user-select: none;
+}
+
+#assistant-button {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(145deg, #00f2fe, #4facfe);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 28px;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 183, 255, 0.4);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    /* Garante que o clique no botão funcione e não arraste a janela */
+    -webkit-app-region: no-drag;
+    position: relative;
+}
+
+#assistant-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(0, 183, 255, 0.6);
+}
+
+#assistant-button:active {
+    transform: scale(0.95);
+}
+
+/* Indicador visual quando está sendo arrastado */
+body.dragging #assistant-button {
+    opacity: 0.8;
+    transform: scale(1.05);
+}
+
+/* Efeito de borda quando próximo às bordas da tela */
+#assistant-button.near-edge {
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3), 0 8px 25px rgba(0, 183, 255, 0.6);
+}
