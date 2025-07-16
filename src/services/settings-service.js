@@ -10,12 +10,38 @@ async function initStore() {
         const schema = {
             defaultMode: {
                 type: 'string',
-                default: 'sugestao' // O modo 'sugestao' será o padrão inicial
+                default: 'sugestao'
             },
-            // NOVO: Schema para guardar os prompts customizados
             customPrompts: {
                 type: 'object',
                 default: {}
+            },
+            // NOVO: configurações expandidas da API
+            apiSettings: {
+                type: 'object',
+                default: {
+                    provider: 'gemini', // gemini, openai, anthropic, cohere
+                    gemini: {
+                        key: '',
+                        model: 'gemini-2.0-flash-exp',
+                        fallbackModel: 'gemini-1.5-flash-latest'
+                    },
+                    openai: {
+                        key: '',
+                        model: 'gpt-4o',
+                        fallbackModel: 'gpt-3.5-turbo'
+                    },
+                    anthropic: {
+                        key: '',
+                        model: 'claude-3-5-sonnet-20241022',
+                        fallbackModel: 'claude-3-haiku-20240307'
+                    },
+                    cohere: {
+                        key: '',
+                        model: 'command-r-plus',
+                        fallbackModel: 'command-r'
+                    }
+                }
             }
         };
         
@@ -54,5 +80,12 @@ async function resetCustomPrompt(mode) {
     storeInstance.set('customPrompts', prompts);
 }
 
-// ATUALIZE AS EXPORTAÇÕES
-module.exports = { getSetting, setSetting, getCustomPrompts, setCustomPrompt, resetCustomPrompt };
+// Exporta todas as funções necessárias
+module.exports = { 
+    initStore,
+    getSetting, 
+    setSetting, 
+    getCustomPrompts, 
+    setCustomPrompt, 
+    resetCustomPrompt 
+};

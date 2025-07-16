@@ -1,5 +1,4 @@
-require('dotenv').config();
-const { app, BrowserWindow, desktopCapturer, ipcMain, screen, globalShortcut, Notification, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, desktopCapturer, ipcMain, screen, globalShortcut, Notification, Tray, nativeImage, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -10,7 +9,7 @@ const automationService = require('../services/automation-service');
 
 // MODIFICADO: Importamos o serviço completo para usar ambas as funções
 const ocrService = require('../services/ocr-service');
-const { getAIResponse } = require('../services/ai-service');
+const { getAIResponse, getDefaultPrompts, testApiKey, needsMoreContext, analyzeWithContextCheck } = require('../services/ai-service');
 const dbService = require('../services/database-service');
 
 let mainWindow;
@@ -19,6 +18,13 @@ let quickCaptureEnabled = true;
 // NOVO: Controle de estado da análise
 let isAnalysisRunning = false;
 let currentAnalysisController = null;
+const defaultSelectedMode = 'sugestao'; // Default mode for storing selected mode
+
+// Armazenar histórico de conversa por janela
+const conversationHistories = new Map();
+
+// Armazenar o texto original capturado por janela
+const originalCapturedTexts = new Map();
 
 // NOVO: Função para criar o ícone da bandeja
 function createTray() {
@@ -261,7 +267,45 @@ function createMainWindow() {
 /**
  * MODIFICADO: Função com controle de cancelamento
  */
-// ... existing code ...
+// Adicione estes handlers após os outros ipcMain.handle existentes
+
+ipcMain.handle('get-api-settings', async () => {
+    const storeInstance = await settingsService.initStore();
+    return storeInstance.get('apiSettings');
+});
+
+ipcMain.handle('set-api-settings', async (event, settings) => {
+    try {
+        // Testa a chave antes de salvar
+        const testResult = await testApiKey(settings);
+        if (!testResult.success) {
+            throw new Error(testResult.error);
+        }
+        
+        // Se a validação passar, salva as configurações
+        const storeInstance = await settingsService.initStore();
+        storeInstance.set('apiSettings', settings);
+        return { success: true };
+    } catch (error) {
+        return { 
+            success: false, 
+            error: error.message || 'Erro ao validar a chave da API'
+        };
+    }
+});
+
+// Adicionar o novo handler test-api-key
+ipcMain.handle('test-api-key', async (event, settings) => {
+    try {
+        const result = await testApiKey(settings);
+        return result;
+    } catch (error) {
+        return { 
+            success: false, 
+            error: error.message || 'Erro ao validar a chave da API'
+        };
+    }
+});
 
 // Função para criar popup de "Pensando..."
 function createThinkingWindow(capturedRect) {
@@ -425,32 +469,43 @@ async function executeFullCaptureFlow(mode) {
                 thinkingWindow.close();
             }
             
-            // Limpa a resposta da IA para encontrar as palavras-chave
-            const targetWords = aiResponse.replace(/[.,*]/g, '').trim().split(/\s+/);
-        
-            // Encontra as palavras correspondentes e suas coordenadas
-            const foundWords = [];
-            for (const word of ocrData.words) {
-                if (targetWords.some(target => word.text.toLowerCase().includes(target.toLowerCase()))) {
-                    foundWords.push(word);
+            // Processa a resposta JSON da IA
+            let highlights = [];
+            try {
+                const categories = JSON.parse(aiResponse);
+                
+                // Processa cada categoria
+                for (const [category, phrases] of Object.entries(categories)) {
+                    for (const phrase of phrases) {
+                        const words = phrase.toLowerCase().split(' ');
+                        const matchedWords = ocrData.words.filter(word => {
+                            return words.some(w => word.text.toLowerCase().includes(w));
+                        });
+
+                        if (matchedWords.length > 0) {
+                            // Calcula o retângulo que engloba todas as palavras da frase
+                            const minX = Math.min(...matchedWords.map(w => w.bbox.x0));
+                            const minY = Math.min(...matchedWords.map(w => w.bbox.y0));
+                            const maxX = Math.max(...matchedWords.map(w => w.bbox.x1));
+                            const maxY = Math.max(...matchedWords.map(w => w.bbox.y1));
+
+                            highlights.push({
+                                x: capturedRect.x + minX,
+                                y: capturedRect.y + minY,
+                                width: maxX - minX,
+                                height: maxY - minY,
+                                category: category,
+                                text: phrase
+                            });
+                        }
+                    }
                 }
+            } catch (error) {
+                console.error('Erro ao processar resposta da IA:', error);
+                highlights = [];
             }
             
-            if (foundWords.length > 0) {
-                // Calcula o retângulo que engloba todas as palavras encontradas
-                const minX = Math.min(...foundWords.map(w => w.bbox.x0));
-                const minY = Math.min(...foundWords.map(w => w.bbox.y0));
-                const maxX = Math.max(...foundWords.map(w => w.bbox.x1));
-                const maxY = Math.max(...foundWords.map(w => w.bbox.y1));
-        
-                // Coordenadas absolutas na tela
-                const highlightRect = {
-                    x: capturedRect.x + minX,
-                    y: capturedRect.y + minY,
-                    width: maxX - minX,
-                    height: maxY - minY,
-                };
-        
+            if (highlights.length > 0) {
                 // Cria a janela de Destaque
                 const highlightWindow = new BrowserWindow({
                     x: 0, y: 0,
@@ -465,20 +520,28 @@ async function executeFullCaptureFlow(mode) {
                 highlightWindow.loadFile('src/highlight-window/index.html');
                 
                 highlightWindow.webContents.on('did-finish-load', () => {
-                    highlightWindow.webContents.send('draw-highlight', highlightRect);
+                    highlightWindow.webContents.send('draw-highlight', highlights);
                 });
                 
-                // Mostra notificação de sucesso
+                // Mostra notificação de sucesso com contagem por categoria
+                const categoryCounts = highlights.reduce((acc, h) => {
+                    acc[h.category] = (acc[h.category] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const countText = Object.entries(categoryCounts)
+                    .map(([cat, count]) => `${count} ${cat.replace('_', ' ')}`)
+                    .join('\n');
+
                 new Notification({
-                    title: 'SkillVision™ - Destaque',
-                    body: `Destacando: ${targetWords.join(', ')}`,
+                    title: 'SkillVision™ - Elementos Encontrados',
+                    body: countText,
                     silent: true
                 }).show();
             } else {
-                // Se não encontrou palavras para destacar
                 new Notification({
                     title: 'SkillVision™ - Destaque',
-                    body: 'Nenhuma palavra relevante encontrada para destacar',
+                    body: 'Nenhum elemento relevante encontrado para destacar',
                     silent: true
                 }).show();
             }
@@ -510,16 +573,32 @@ async function executeFullCaptureFlow(mode) {
                 thinkingWindow.close();
             }
             
+            // Obtém as dimensões da tela
+            const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+            
+            // Calcula dimensões responsivas (80% da tela, mas com limites)
+            const windowWidth = Math.min(Math.max(Math.floor(screenWidth * 0.8), 800), 1400);
+            const windowHeight = Math.min(Math.max(Math.floor(screenHeight * 0.8), 600), 900);
+            
+            // Centraliza a janela na tela
+            const x = Math.floor((screenWidth - windowWidth) / 2);
+            const y = Math.floor((screenHeight - windowHeight) / 2);
+            
             const suggestionWindow = new BrowserWindow({
-                x: capturedRect.x + capturedRect.width + 10,
-                y: capturedRect.y,
-                width: 400, // Aumentado
-                height: mode === 'autocorrecao' ? 350 : 300, // Aumentado
+                x: x,
+                y: y,
+                width: windowWidth,
+                height: windowHeight,
                 frame: false,
                 transparent: true,
                 alwaysOnTop: true,
                 skipTaskbar: true,
-                resizable: false,
+                resizable: true,
+                movable: true, // Permite mover a janela
+                minWidth: 600,
+                minHeight: 400,
+                maxWidth: screenWidth,
+                maxHeight: screenHeight,
                 webPreferences: {
                     preload: path.join(__dirname, '../suggestion-window/preload.js'),
                     contextIsolation: true
@@ -529,7 +608,28 @@ async function executeFullCaptureFlow(mode) {
             suggestionWindow.loadFile('src/suggestion-window/index.html');
 
             suggestionWindow.webContents.on('did-finish-load', () => {
-                suggestionWindow.webContents.send('send-suggestions', { suggestions: aiResponseText, mode: mode });
+                const windowId = suggestionWindow.id;
+                
+                // NOVO: Salvar o texto original capturado
+                originalCapturedTexts.set(windowId, text);
+                
+                // Inicializar o histórico da conversa
+                if (!conversationHistories.has(windowId)) {
+                    conversationHistories.set(windowId, []);
+                }
+                const history = conversationHistories.get(windowId);
+                
+                // Adiciona o contexto inicial: texto capturado + resposta da IA
+                history.push(`Texto capturado: "${text}"`);
+                history.push(aiResponseText);
+                
+                // Envia as sugestões para a janela
+                suggestionWindow.webContents.send('send-suggestions', { 
+                    suggestions: aiResponseText, 
+                    mode: mode,
+                    originalText: text,
+                    hasInitialContext: true
+                });
             });
             
             ipcMain.once('close-suggestion-window', () => {
@@ -550,16 +650,32 @@ async function executeFullCaptureFlow(mode) {
                 thinkingWindow.close();
             }
             
+            // Obtém as dimensões da tela
+            const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+            
+            // Calcula dimensões responsivas para janelas menores
+            const windowWidth = Math.min(Math.max(Math.floor(screenWidth * 0.4), 450), 600);
+            const windowHeight = Math.min(Math.max(mode === 'raciocinio' ? Math.floor(screenHeight * 0.6) : Math.floor(screenHeight * 0.5), mode === 'raciocinio' ? 500 : 400), 700);
+            
+            // Centraliza a janela na tela
+            const x = Math.floor((screenWidth - windowWidth) / 2);
+            const y = Math.floor((screenHeight - windowHeight) / 2);
+            
             const responseWindow = new BrowserWindow({
-                x: capturedRect.x + capturedRect.width + 10,
-                y: capturedRect.y,
-                width: 450, // Aumentado para acomodar respostas mais longas
-                height: mode === 'raciocinio' ? 400 : 350, // Altura maior para modo raciocínio
+                x: x,
+                y: y,
+                width: windowWidth,
+                height: windowHeight,
                 frame: false,
                 transparent: true,
                 alwaysOnTop: true,
                 skipTaskbar: true,
-                resizable: false,
+                resizable: true, // Permite redimensionar
+                movable: true, // Permite mover
+                minWidth: 400,
+                minHeight: 300,
+                maxWidth: screenWidth,
+                maxHeight: screenHeight,
                 webPreferences: {
                     preload: path.join(__dirname, '../suggestion-window/preload.js'),
                     contextIsolation: true
@@ -569,7 +685,28 @@ async function executeFullCaptureFlow(mode) {
             responseWindow.loadFile('src/suggestion-window/index.html');
 
             responseWindow.webContents.on('did-finish-load', () => {
-                responseWindow.webContents.send('send-suggestions', { suggestions: aiResponseText, mode: mode });
+                const windowId = responseWindow.id;
+                
+                // NOVO: Salvar o texto original capturado
+                originalCapturedTexts.set(windowId, text);
+                
+                // Inicializar o histórico da conversa
+                if (!conversationHistories.has(windowId)) {
+                    conversationHistories.set(windowId, []);
+                }
+                const history = conversationHistories.get(windowId);
+                
+                // Adiciona o contexto inicial: texto capturado + resposta da IA
+                history.push(`Texto capturado: "${text}"`);
+                history.push(aiResponseText);
+                
+                // Envia as sugestões para a janela
+                responseWindow.webContents.send('send-suggestions', { 
+                    suggestions: aiResponseText, 
+                    mode: mode,
+                    originalText: text,
+                    hasInitialContext: true
+                });
             });
             
             ipcMain.once('close-suggestion-window', () => {
@@ -637,6 +774,94 @@ ipcMain.handle('get-analysis-state', () => {
     return { isRunning: isAnalysisRunning };
 });
 
+// Handler atualizado para contexto adicional com verificação contínua
+ipcMain.on('send-additional-context', async (event, additionalContext) => {
+    const currentWindow = BrowserWindow.fromWebContents(event.sender);
+    const windowId = currentWindow.id;
+    
+    try {
+        // Envia indicador de carregamento para o chat
+        if (currentWindow && !currentWindow.isDestroyed()) {
+            currentWindow.webContents.send('chat-loading', true);
+        }
+        
+        // Obtém o histórico da conversa (que agora inclui o contexto inicial)
+        if (!conversationHistories.has(windowId)) {
+            conversationHistories.set(windowId, []);
+        }
+        const history = conversationHistories.get(windowId);
+        
+        // Adiciona a nova mensagem do usuário ao histórico
+        history.push(additionalContext);
+        
+        // Obtém o texto original se disponível
+        const originalText = originalCapturedTexts.get(windowId) || '';
+        
+        // Cria um contexto mais completo para a IA
+        let contextForAI = additionalContext;
+        if (originalText && history.length <= 3) { // Primeiras interações
+            contextForAI = `Contexto original: "${originalText}"\n\nPergunta adicional: ${additionalContext}`;
+        }
+        
+        // Analisa com verificação de contexto
+        const analysis = await analyzeWithContextCheck({
+            text: contextForAI,
+            mode: 'sugestao',
+            conversationHistory: history,
+            signal: null
+        });
+        
+        // Adiciona a resposta da IA ao histórico
+        history.push(analysis.response);
+        
+        // Remove indicador de carregamento
+        if (currentWindow && !currentWindow.isDestroyed()) {
+            currentWindow.webContents.send('chat-loading', false);
+            
+            // Envia a resposta para o chat
+            currentWindow.webContents.send('chat-response', {
+                message: analysis.response,
+                isUser: false,
+                needsMoreContext: analysis.needsMoreContext,
+                isComplete: analysis.isComplete
+            });
+            
+            // Se ainda precisa de contexto, mostra a área de interação
+            if (analysis.needsMoreContext) {
+                currentWindow.webContents.send('show-interaction-area', {
+                    message: 'Por favor, forneça mais informações para uma resposta mais precisa...'
+                });
+            }
+        }
+        
+    } catch (error) {
+        console.error('Erro ao processar contexto adicional:', error);
+        
+        // Remove indicador de carregamento em caso de erro
+        if (currentWindow && !currentWindow.isDestroyed()) {
+            currentWindow.webContents.send('chat-loading', false);
+            currentWindow.webContents.send('chat-response', {
+                message: 'Desculpe, ocorreu um erro ao processar sua mensagem.',
+                isUser: false,
+                needsMoreContext: false,
+                isComplete: false
+            });
+        }
+    }
+});
+
+ipcMain.on('request-new-capture', () => {
+    // Fecha a janela atual de sugestões
+    const windows = BrowserWindow.getAllWindows();
+    const suggestionWindow = windows.find(w => w.webContents.getURL().includes('suggestion-window'));
+    if (suggestionWindow) {
+        suggestionWindow.close();
+    }
+    
+    // Inicia nova captura
+    executeFullCaptureFlow('sugestao').catch(console.error);
+});
+
 app.whenReady().then(() => {
     createMainWindow();
     createTray(); // Cria o ícone da bandeja
@@ -688,8 +913,7 @@ app.on('window-all-closed', () => {
     }
 });
 
-// REMOVIDO: Todos os handlers relacionados ao assistente flutuante
-// (toggle-assistant-window, floating-button-clicked, etc.)
+
 
 // Mantidos os handlers existentes para outras funcionalidades
 ipcMain.handle('start-full-flow', async (event, mode) => {
@@ -772,6 +996,31 @@ ipcMain.on('apply-fix', async (event, codeToType) => {
                 body: 'Verifique o console para o código corrigido.'
             }).show();
         }
+    }
+});
+
+// Handler para minimizar a janela de sugestões
+ipcMain.on('minimize-suggestion-window', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win && !win.isDestroyed()) {
+        console.log('Minimizando janela de sugestões'); // Debug
+        win.minimize();
+        // NÃO fechar a janela, apenas minimizar
+    }
+});
+
+// Handler para fechar a janela de sugestões (separado do minimizar)
+ipcMain.on('close-suggestion-window', (event) => {
+    const currentWindow = BrowserWindow.fromWebContents(event.sender);
+    const windowId = currentWindow.id;
+    
+    // Remove o histórico da conversa e o texto original
+    conversationHistories.delete(windowId);
+    originalCapturedTexts.delete(windowId);
+    
+    if (currentWindow && !currentWindow.isDestroyed()) {
+        console.log('Fechando janela de sugestões'); // Debug
+        currentWindow.close();
     }
 });
 
@@ -865,17 +1114,7 @@ ipcMain.on('toggle-assistant-window', () => {
 // Adicionar após os outros handlers IPC (por volta da linha 700)
 let selectedMode = 'sugestao'; // Variável para armazenar o modo selecionado
 
-// NOVO: Handler para definir o modo selecionado
-ipcMain.handle('set-mode', async (event, mode) => {
-    selectedMode = mode;
-    console.log(`Modo selecionado atualizado para: ${mode}`);
-    return { success: true };
-});
 
-// NOVO: Handler para obter o modo atual
-ipcMain.handle('get-selected-mode', () => {
-    return selectedMode;
-});
 
 // Handler para definir posição da janela flutuante
 ipcMain.on('set-floating-position', (event, { x, y }) => {
@@ -995,4 +1234,14 @@ ipcMain.handle('delete-history-older-than', async (event, date) => {
         console.error('Erro ao deletar registros antigos:', error);
         return { success: false, message: 'Erro ao deletar registros antigos: ' + error.message };
     }
+});
+// Add these handlers after the other ipcMain.handle declarations
+ipcMain.handle('set-mode', async (event, mode) => {
+    selectedMode = mode;
+    console.log('Mode updated:', mode);
+    return mode;
+});
+
+ipcMain.handle('get-selected-mode', async () => {
+    return selectedMode;
 });

@@ -1,95 +1,116 @@
 // src/services/ai-service.js
-require('dotenv').config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const settingsService = require('./settings-service'); // NOVO
+const settingsService = require('./settings-service');
 
-const API_KEY = process.env.GOOGLE_API_KEY;
-const genAI = new GoogleGenerativeAI(API_KEY);
+let genAI = null;
 
 // NOVO: Objeto com os prompts padrão
 const defaultPrompts = {
-    destaque: `Você é um especialista em resolver provas. Analise a seguinte questão de múltipla escolha. Sua única tarefa é retornar APENAS o texto exato da alternativa correta, sem a letra da alternativa (A, B, C...). Não adicione nenhuma explicação, formatação ou introdução. A questão é:`,
-    sugestao: `Você é um assistente de programação ultra-eficiente. Analise o seguinte trecho de código ou pergunta e forneça 2 ou 3 sugestões curtas, correções ou otimizações em formato de lista (use asteriscos * para cada item). Seja direto, prático e não use introduções. O trecho é:`,
-    autocorrecao: `Analise o seguinte bloco de código, identifique e corrija os erros. Retorne APENAS o bloco de código corrigido e completo, sem nenhuma explicação, introdução ou formatação extra como \`\`\`javascript.`,
-    etico: `Você é um tutor especialista no "Modo Ético". O usuário apresentará um problema ou pergunta. Sua missão é guiá-lo à solução, mas NUNCA dar a resposta final diretamente. Use as seguintes técnicas:\n1. Faça perguntas que o levem a pensar sobre o problema.\n2. Explique o conceito fundamental por trás da questão.\n3. Sugira o primeiro passo ou uma forma de começar a resolver.\n4. Se for um código, aponte onde pode estar o erro, mas não o corrija.\nA pergunta do usuário é:`,
-    directo: `Como um assistente especialista em programação e lógica, responda à seguinte questão de forma clara e direta:`,
-    raciocinio: `💬 RACIOCÍNIO: 
-Você é um assistente inteligente universal capaz de analisar e resolver qualquer tipo de questão ou problema, inclusive provas discursivas e de múltipla escolha. Você interpreta textos, imagens, fórmulas, códigos e qualquer conteúdo apresentado. Sua análise segue uma metodologia completa, estruturada e didática, incluindo interpretação crítica de textos e verificação lógica de afirmações.
+    destaque: `Você é um especialista em análise de questões...`,
+    sugestao: `Você é um assistente de programação especializado em fornecer explicações detalhadas e contextuais.
 
-🔍 ANÁLISE DO CONTEÚDO:
-Identifique o tipo de conteúdo (ex: interpretação de texto, questão científica, código, imagem etc.)
+Sua função é:
+1. EXPLICAR conceitos de maneira clara e abrangente
+2. IDENTIFICAR quando faltam informações importantes
+3. SOLICITAR contexto adicional quando necessário
+4. RELACIONAR o conceito com outros temas relevantes
+5. FORNECER exemplos práticos e casos de uso
 
-Se houver imagem: descreva o conteúdo visual e extraia elementos relevantes
+Ao analisar o texto:
+1. Se for um termo técnico:
+   - Explique seu significado
+   - Descreva seus usos comuns
+   - Mencione conceitos relacionados
+   - Forneça exemplos práticos
+   - Indique possíveis problemas comuns
 
-Corrija possíveis erros de OCR em textos, fórmulas ou códigos
+2. Se for um trecho de código:
+   - Explique a funcionalidade
+   - Destaque padrões importantes
+   - Sugira possíveis melhorias
+   - Aponte possíveis problemas
+   - Peça mais contexto se necessário
 
-Converta notações ou trechos mal formatados para formatos claros
+3. Se for uma dúvida:
+   - Identifique o conceito principal
+   - Forneça uma explicação inicial
+   - Solicite esclarecimentos se necessário
+   - Sugira tópicos relacionados
+   - Ofereça recursos adicionais
 
-📚 INTERPRETAÇÃO E CONTEXTO (Textos e Questões de Linguagem):
-Leia com atenção o(s) texto(s) apresentado(s)
+4. Se faltar contexto:
+   - Indique quais informações estão faltando
+   - Faça perguntas específicas
+   - Sugira diferentes cenários possíveis
+   - Explique por que o contexto é importante
 
-Identifique os temas centrais, intenção dos autores, pontos de convergência e divergência
-
-Analise recursos linguísticos, argumentos e relações entre as ideias
-
-Para cada afirmação dada, verifique se está totalmente de acordo com o(s) texto(s), parcialmente correta ou incorreta — com justificativa
-
-Detecte inferências indevidas, generalizações ou erros de interpretação
-
-🧠 RACIOCÍNIO E PROCESSAMENTO LÓGICO:
-Aplique raciocínio coerente com base no conteúdo e na estrutura do enunciado
-
-Relacione dados, ideias, argumentos ou evidências conforme o tipo de questão (matemática, programação, ciências humanas, etc.)
-
-Construa a linha de raciocínio clara, lógica e bem fundamentada
-
-⚙️ METODOLOGIA DE RESOLUÇÃO:
-Escolha a melhor abordagem para resolver a questão (ex: dedução textual, análise semântica, aplicação de fórmulas)
-
-Explicite o processo passo a passo
-
-Justifique cada conclusão com base em evidência textual, lógica ou técnica
-
-📝 EXPLICAÇÃO DETALHADA:
-Expanda os conceitos envolvidos (ex: o que é "autodiagnóstico", "perfil preventivo", "correlação positiva", etc.)
-
-Mostre como chegou à resposta, ponto a ponto
-
-Quando houver alternativas, explique o porquê de cada uma estar correta ou incorreta
-
-Inclua analogias, quando necessário, para facilitar o entendimento
-
-✅ RESPOSTA FINAL:
-Para múltipla escolha: indique a alternativa correta, com justificativa completa
-
-Para discursivas: forneça uma resposta bem articulada e estruturada
-
-Valide a coerência da resposta com base nos textos e argumentos
-
-💡 INSIGHTS ADICIONAIS:
-Dê dicas ou sugestões para estudar o conteúdo abordado
-
-Aponte temas relacionados ou implicações práticas
-
-Sugira formas de aprofundamento (vídeos, livros, temas conexos)
-
-Conteúdo a analisar:`
+Sempre:
+- Use linguagem clara e profissional
+- Forneça exemplos relevantes
+- Indique quando mais informações são necessárias
+- Relacione com outros conceitos importantes
+- Mantenha foco no objetivo do usuário`,
+    autocorrecao: `Analise o seguinte bloco de código...`,
+    etico: `Você é um tutor especialista no "Modo Ético"...`,
+    directo: `Como um assistente especialista em programação e lógica...`,
+    raciocinio: `💬 RACIOCÍNIO...`,
+    shadow: `Você é um assistente especializado em modo shadow...`
 };
 
-/**
- * Envia um texto para a API do Gemini e retorna a resposta.
- * @param {Object} params - Objeto contendo text, mode e signal
- * @param {string} params.text - O texto extraído pelo OCR
- * @param {string} params.mode - O modo de operação ('directo', 'etico', 'sugestao', 'destaque', 'autocorrecao', 'raciocinio')
- * @param {AbortSignal} params.signal - Sinal para cancelar a operação
- * @returns {Promise<string>} A resposta gerada pela IA.
- */
+async function initializeAI() {
+    const store = await settingsService.initStore();
+    const apiSettings = store.get('apiSettings');
+    
+    if (apiSettings && apiSettings.key) {
+        genAI = new GoogleGenerativeAI(apiSettings.key);
+    } else {
+        genAI = null;
+    }
+}
+
+// NOVA: Função para tentar com fallback
+async function getModelWithFallback() {
+    const store = await settingsService.initStore();
+    const apiSettings = store.get('apiSettings');
+    
+    const primaryModel = apiSettings.model || 'gemini-2.0-flash-exp';
+    const fallbackModel = apiSettings.fallbackModel || 'gemini-1.5-flash-latest';
+    
+    return { primaryModel, fallbackModel };
+}
+
+// NOVA: Função para executar com fallback automático
+async function executeWithFallback(operation, primaryModel, fallbackModel) {
+    try {
+        console.log(`Tentando com modelo principal: ${primaryModel}`);
+        return await operation(primaryModel);
+    } catch (error) {
+        console.warn(`Erro com modelo principal (${primaryModel}):`, error.message);
+        
+        // Verifica se é um erro que justifica fallback
+        if (error.status === 404 || error.status === 400 || error.message.includes('model not found')) {
+            console.log(`Tentando fallback para: ${fallbackModel}`);
+            try {
+                return await operation(fallbackModel);
+            } catch (fallbackError) {
+                console.error(`Erro também no modelo fallback (${fallbackModel}):`, fallbackError.message);
+                throw new Error(`Ambos os modelos falharam. Principal: ${error.message}, Fallback: ${fallbackError.message}`);
+            }
+        } else {
+            // Para outros tipos de erro (quota, rede, etc.), não tenta fallback
+            throw error;
+        }
+    }
+}
+
 async function getAIResponse({ text, mode, signal = null }) {
-    if (!API_KEY) {
-        return "Erro: A chave da API do Google não foi configurada no arquivo .env";
+    if (!genAI) {
+        await initializeAI();
     }
 
-    console.log(`Enviando texto para a API do Gemini no modo: ${mode}`);
+    if (!genAI) {
+        return "Erro: Nenhuma chave da API configurada. Por favor, configure uma chave nas configurações do aplicativo.";
+    }
 
     try {
         // Verifica cancelamento antes de iniciar
@@ -97,8 +118,8 @@ async function getAIResponse({ text, mode, signal = null }) {
             throw new Error('Operação cancelada');
         }
         
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-
+        const { primaryModel, fallbackModel } = await getModelWithFallback();
+        
         // NOVO: Lógica dinâmica para buscar o prompt
         const customPrompts = await settingsService.getCustomPrompts();
         const promptTemplate = customPrompts[mode] || defaultPrompts[mode];
@@ -115,46 +136,190 @@ async function getAIResponse({ text, mode, signal = null }) {
         // Monta o prompt final
         const prompt = `${promptTemplate} "${text}"`;
 
-        // Cria uma Promise que pode ser cancelada
-        const aiPromise = model.generateContent(prompt);
-        
-        // Se há um signal, cria uma Promise de cancelamento
-        if (signal) {
-            const cancelPromise = new Promise((_, reject) => {
-                signal.addEventListener('abort', () => {
-                    reject(new Error('Operação cancelada'));
+        // NOVO: Operação com fallback
+        const operation = async (modelName) => {
+            const model = genAI.getGenerativeModel({ model: modelName });
+            const aiPromise = model.generateContent(prompt);
+            
+            if (signal) {
+                const cancelPromise = new Promise((_, reject) => {
+                    signal.addEventListener('abort', () => {
+                        reject(new Error('Operação cancelada'));
+                    });
                 });
-            });
+                return await Promise.race([aiPromise, cancelPromise]);
+            } else {
+                return await aiPromise;
+            }
+        };
+        
+        const result = await executeWithFallback(operation, primaryModel, fallbackModel);
+        const response = await result.response;
+        let aiText = response.text();
+        
+        // Remove formatação markdown se for modo destaque
+        if (mode === 'destaque') {
+            aiText = aiText.replace(/```json\s*|```\s*|`/g, '');
+            aiText = aiText.trim();
             
-            // Usa Promise.race para cancelar se necessário
-            const result = await Promise.race([aiPromise, cancelPromise]);
-            const response = await result.response;
-            const aiText = response.text();
-            
-            console.log('Resposta do Gemini recebida com sucesso.');
-            return aiText;
-        } else {
-            // Sem cancelamento, executa normalmente
-            const result = await aiPromise;
-            const response = await result.response;
-            const aiText = response.text();
-            
-            console.log('Resposta do Gemini recebida com sucesso.');
-            return aiText;
+            if (!aiText.startsWith('{') || !aiText.endsWith('}')) {
+                throw new Error('Resposta da IA não está no formato JSON esperado');
+            }
         }
+        
+        console.log('Resposta do Gemini recebida com sucesso.');
+        return aiText;
 
     } catch (error) {
         if (error.message.includes('cancelada') || error.message.includes('Operação cancelada')) {
             throw new Error('IA cancelada pelo usuário');
         }
+        
+        // NOVO: Tratamento específico para erro de quota
+        if (error.status === 429) {
+            return "⚠️ Limite diário da API atingido. Tente novamente amanhã ou considere fazer upgrade do plano. Para mais informações: https://ai.google.dev/gemini-api/docs/rate-limits";
+        }
+        
         console.error('Erro ao chamar a API do Google AI:', error);
         return `Ocorreu um erro ao conectar com o Gemini. Detalhes: ${error.message}`;
     }
 }
 
-// NOVO: Função para obter os prompts padrão (útil para a UI)
-function getDefaultPrompts() {
-    return defaultPrompts;
+async function testApiKey(apiSettings) {
+    try {
+        const genAI = new GoogleGenerativeAI(apiSettings.key);
+        const { primaryModel, fallbackModel } = await getModelWithFallback();
+        
+        const operation = async (modelName) => {
+            const model = genAI.getGenerativeModel({ model: modelName });
+            const result = await model.generateContent("Test");
+            await result.response;
+            return { success: true, model: modelName };
+        };
+        
+        return await executeWithFallback(operation, primaryModel, fallbackModel);
+        
+    } catch (error) {
+        return { 
+            success: false, 
+            error: error.message || 'Erro ao validar a chave da API'
+        };
+    }
 }
 
-module.exports = { getAIResponse, getDefaultPrompts };
+async function analyzeWithContextCheck({ text, mode, conversationHistory = [], signal = null }) {
+    if (!genAI) {
+        await initializeAI();
+    }
+
+    if (!genAI) {
+        return {
+            response: "Erro: Nenhuma chave da API configurada. Por favor, configure uma chave nas configurações do aplicativo.",
+            needsMoreContext: false,
+            isComplete: false
+        };
+    }
+
+    try {
+        const { primaryModel, fallbackModel } = await getModelWithFallback();
+        const customPrompts = await settingsService.getCustomPrompts();
+        let promptTemplate = customPrompts[mode] || defaultPrompts[mode];
+        
+        // Melhora o prompt para incluir o contexto da conversa
+        if (conversationHistory.length > 0) {
+            promptTemplate += `\n\nCONTEXTO DA CONVERSA:\n`;
+            
+            for (let i = 0; i < conversationHistory.length; i++) {
+                if (i === 0 && conversationHistory[i].startsWith('Texto capturado:')) {
+                    promptTemplate += `${conversationHistory[i]}\n`;
+                } else if (i % 2 === 1) {
+                    promptTemplate += `IA: ${conversationHistory[i]}\n`;
+                } else {
+                    promptTemplate += `Usuário: ${conversationHistory[i]}\n`;
+                }
+            }
+            
+            promptTemplate += `\n\nNOVA PERGUNTA DO USUÁRIO: "${text}"\n\nCom base em todo o contexto da conversa acima, responda à nova pergunta do usuário. Se você já forneceu informações relevantes anteriormente, faça referência a elas. Se ainda precisar de mais contexto específico, indique claramente o que falta.`;
+        } else {
+            promptTemplate += ` "${text}"\n\nAntes de responder, avalie se você tem contexto suficiente para fornecer uma resposta completa e útil. Se precisar de mais informações específicas, indique claramente o que falta.`;
+        }
+
+        if (signal && signal.aborted) {
+            throw new Error('Operação cancelada');
+        }
+
+        const operation = async (modelName) => {
+            const model = genAI.getGenerativeModel({ model: modelName });
+            return await model.generateContent(promptTemplate);
+        };
+        
+        const result = await executeWithFallback(operation, primaryModel, fallbackModel);
+        const response = await result.response;
+        let aiText = response.text();
+        
+        const needsContext = needsMoreContext(aiText);
+        const isComplete = !needsContext && aiText.length > 100;
+        
+        return {
+            response: aiText,
+            needsMoreContext: needsContext,
+            isComplete: isComplete
+        };
+        
+    } catch (error) {
+        if (error.message.includes('cancelada') || error.message.includes('Operação cancelada')) {
+            throw new Error('IA cancelada pelo usuário');
+        }
+        
+        // NOVO: Tratamento específico para erro de quota
+        if (error.status === 429) {
+            return {
+                response: "⚠️ Limite diário da API atingido. Tente novamente amanhã ou considere fazer upgrade do plano.",
+                needsMoreContext: false,
+                isComplete: false
+            };
+        }
+        
+        console.error('Erro ao chamar a API do Google AI:', error);
+        return {
+            response: `Ocorreu um erro ao conectar com o Gemini. Detalhes: ${error.message}`,
+            needsMoreContext: false,
+            isComplete: false
+        };
+    }
+}
+
+// Inicializa o serviço de AI
+initializeAI();
+
+module.exports = { 
+    getAIResponse, 
+    getDefaultPrompts,
+    testApiKey,
+    needsMoreContext,
+    analyzeWithContextCheck,
+    getModelWithFallback, // NOVO
+    executeWithFallback   // NOVO
+};
+
+// Adicionar cache de respostas
+const responseCache = new Map();
+
+// Implementar retry com backoff
+const retryWithBackoff = async (fn, maxRetries = 3) => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      // Detectar erro de quota e mostrar mensagem amigável
+      if (error.status === 429) {
+        return {
+          text: "⚠️ Limite diário da API atingido. Tente novamente amanhã ou considere fazer upgrade do plano.",
+          needsMoreContext: false
+        };
+      }
+      const delay = Math.pow(2, i) * 1000; // Exponential backoff
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+};
