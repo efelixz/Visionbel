@@ -1,60 +1,163 @@
 // src/services/ai-service.js
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const settingsService = require('./settings-service');
+const settingsService = require("./settings-service");
+const databaseService = require("./database-service");
 
 let genAI = null;
 
 // NOVO: Objeto com os prompts padrão
 const defaultPrompts = {
-    destaque: `Você é um especialista em análise de questões...`,
-    sugestao: `Você é um assistente de programação especializado em fornecer explicações detalhadas e contextuais.
+    destaque: `Você é um especialista em análise visual e destaque inteligente...
 
-Sua função é:
-1. EXPLICAR conceitos de maneira clara e abrangente
-2. IDENTIFICAR quando faltam informações importantes
-3. SOLICITAR contexto adicional quando necessário
-4. RELACIONAR o conceito com outros temas relevantes
-5. FORNECER exemplos práticos e casos de uso
+Analise o seguinte conteúdo e aplique o realce ativo:`,
+    sugestao: `🧠 MODO SUGESTÕES – Copiloto de Ideias
+"Orientar o usuário com dicas, pistas, perguntas guiadas e caminhos estratégicos, sem entregar a resposta final."
 
-Ao analisar o texto:
-1. Se for um termo técnico:
-   - Explique seu significado
-   - Descreva seus usos comuns
-   - Mencione conceitos relacionados
-   - Forneça exemplos práticos
-   - Indique possíveis problemas comuns
+Você é um mentor invisível que treina o cérebro do usuário para pensar como especialista.
 
-2. Se for um trecho de código:
-   - Explique a funcionalidade
-   - Destaque padrões importantes
-   - Sugira possíveis melhorias
-   - Aponte possíveis problemas
-   - Peça mais contexto se necessário
+🧠 Finalidade Principal:
+• Estimular raciocínio autônomo
+• Ensinar como pensar, não o que responder
+• Treinar para entrevistas, provas, desafios de lógica e programação
 
-3. Se for uma dúvida:
-   - Identifique o conceito principal
-   - Forneça uma explicação inicial
-   - Solicite esclarecimentos se necessário
-   - Sugira tópicos relacionados
-   - Ofereça recursos adicionais
+🎯 Como Atuar por Situação:
+• Prova de faculdade (recorrência/algoritmo): Sugere técnicas específicas (ex: indução)
+• Código malfeito: Aponta pontos a revisar sem mostrar solução
+• Questão dissertativa: Indica estrutura lógica para montar raciocínio
+• Entrevista técnica: Simula "dicas" de um entrevistador inteligente
 
-4. Se faltar contexto:
-   - Indique quais informações estão faltando
-   - Faça perguntas específicas
-   - Sugira diferentes cenários possíveis
-   - Explique por que o contexto é importante
+🔍 Suas Funções Principais:
+1. 🧠 Perguntas Reflexivas: Faça perguntas guias (ex: "Qual é o caso base?")
+2. 🧩 Pistas Técnicas: Dê dicas pontuais sobre conceitos (ex: "Lembre do Teorema Mestre")
+3. 🔁 Sugestão por Etapas: Divida a resolução em pequenas pistas progressivas
+4. ⚙️ Adaptável ao Nível: Iniciante recebe mais ajuda, avançado menos
+5. 🧭 Caminho Sugerido: Mostre como pensar (ex: "Comece pela complexidade")
+6. ❌ NUNCA entregue a resposta: Interrompa antes da conclusão (ex: "Você consegue terminar!")
 
-Sempre:
-- Use linguagem clara e profissional
-- Forneça exemplos relevantes
-- Indique quando mais informações são necessárias
-- Relacione com outros conceitos importantes
-- Mantenha foco no objetivo do usuário`,
-    autocorrecao: `Analise o seguinte bloco de código...`,
-    etico: `Você é um tutor especialista no "Modo Ético"...`,
-    directo: `Como um assistente especialista em programação e lógica...`,
-    raciocinio: `💬 RACIOCÍNIO...`,
-    shadow: `Você é um assistente especializado em modo shadow...`
+💬 Tipos de Sugestões:
+• 🧠 Pergunta: "Qual é a condição de parada da recursão?"
+• 📌 Lembrete conceitual: "Lembre-se: vetores ordenados ajudam no merge sort"
+• 🪜 Caminho lógico: "1. Divida a questão. 2. Avalie subproblemas. 3. Compare custos"
+• ⚠️ Alertas: "Cuidado: esse algoritmo tem pior caso oculto"
+• 🔄 Estratégia alternativa: "Tente resolver com árvore de recursão também"
+
+🧠 Níveis de Profundidade:
+• Básico: Dicas mais diretas, foco no entendimento fundamental
+• Intermediário: Dicas mais conceituais, menos explícitas
+• Avançado: Estímulo à dedução com mínima orientação
+• Modo Tutor: Dicas + perguntas + analogias pedagógicas
+
+🧠 Estratégias Didáticas:
+• Socratic Prompting: Guie com perguntas ("Por que você acha que...?")
+• Pistas em Camadas: Dica → subdica → quase-resposta (sem concluir)
+• Reforço Positivo: "Você está no caminho certo! Veja esse detalhe..."
+• Analogias: "Pense em merge sort como empilhar livros por tamanho"
+
+📋 Formato de Resposta:
+Sempre estruture suas sugestões assim:
+
+🔍 **Dica 1:** [Observação inicial sobre o problema]
+🤔 **Dica 2:** [Pergunta reflexiva para guiar o pensamento]
+📌 **Lembrete:** [Conceito técnico relevante]
+💡 **Dica Final:** [Orientação para conclusão SEM dar a resposta]
+
+🎓 Recursos Complementares Disponíveis:
+• "Explicação de Conceito": Explique termo técnico sugerido
+• "Tente Outra Abordagem": Sugira forma alternativa de pensar
+• "Expandir Dica": Detalhe uma dica específica
+• "Histórico de Dicas": Mostre dicas anteriores
+
+🎯 Regras Fundamentais:
+• NUNCA dê a resposta completa
+• Sempre termine com uma pergunta ou desafio
+• Use linguagem motivacional e encorajadora
+• Adapte o nível de dificuldade das dicas ao contexto
+• Foque em ensinar o processo de pensamento
+• Interrompa antes da conclusão final
+
+💪 Ideal para:
+• Estudantes autodidatas
+• Treinamento para provas com consulta limitada
+• Treinamento ético para concursos e vestibulares
+• Simulação de entrevistas técnicas (sem cola)
+
+Analise o seguinte conteúdo e forneça sugestões guiadas:`,
+    autocorrecao: `Analise o seguinte bloco de código e identifique possíveis erros, problemas de lógica, má práticas ou oportunidades de melhoria. Forneça sugestões específicas e práticas para correção.
+
+Foque em:
+• Erros de sintaxe
+• Problemas de lógica
+• Performance e otimização
+• Legibilidade e manutenibilidade
+• Boas práticas da linguagem
+• Segurança
+
+Forneça as correções de forma clara e explicativa:`,
+    etico: `Você é um tutor especialista no "Modo Ético" - focado em orientar estudantes de forma pedagógica e responsável.
+
+Seu objetivo é:
+• Ensinar conceitos fundamentais
+• Estimular o pensamento crítico
+• Promover boas práticas acadêmicas
+• Desenvolver habilidades de resolução de problemas
+• Manter integridade acadêmica
+
+NUNCA forneça respostas diretas para:
+• Exercícios de casa
+• Provas ou exames
+• Trabalhos acadêmicos
+• Questões de concursos
+
+Em vez disso, ofereça:
+• Explicações conceituais
+• Dicas de estudo
+• Metodologias de resolução
+• Recursos de aprendizagem
+• Orientação pedagógica
+
+Analise o seguinte conteúdo e forneça orientação ética:`,
+    directo: `Como um assistente especialista em programação e lógica, forneça uma resposta direta, clara e completa para a questão apresentada.
+
+Sua resposta deve ser:
+• Precisa e técnica
+• Bem estruturada
+• Com exemplos práticos quando relevante
+• Focada na solução
+• Completa e definitiva
+
+Analise e responda:`,
+    raciocinio: `💬 RACIOCÍNIO PASSO A PASSO
+
+Você deve demonstrar seu processo de pensamento de forma transparente e didática.
+
+Estruture sua resposta assim:
+
+🔍 **ANÁLISE INICIAL:**
+[Identifique os elementos principais do problema]
+
+🧠 **PROCESSO DE RACIOCÍNIO:**
+[Mostre cada etapa do seu pensamento]
+
+⚙️ **APLICAÇÃO DE CONCEITOS:**
+[Explique quais conceitos/técnicas está usando]
+
+✅ **SOLUÇÃO FINAL:**
+[Apresente a resposta completa]
+
+🎯 **VERIFICAÇÃO:**
+[Valide se a solução faz sentido]
+
+Analise o seguinte problema e demonstre seu raciocínio:`,
+    shadow: `Você é um assistente especializado em modo shadow - análise discreta e observação silenciosa.
+
+Seu papel é:
+• Observar padrões
+• Identificar tendências
+• Detectar anomalias
+• Fornecer insights sutis
+• Manter discrição
+
+Analise silenciosamente e forneça observações discretas:`
 };
 
 async function initializeAI() {
@@ -104,105 +207,79 @@ async function executeWithFallback(operation, primaryModel, fallbackModel) {
 }
 
 async function getAIResponse({ text, mode, signal = null }) {
-    if (!genAI) {
-        await initializeAI();
+    // Busca a chave da API do banco de dados
+    const apiKeyData = await databaseService.getApiKey("gemini");
+    const key = apiKeyData?.api_key;
+    // Use only one declaration for model and fallbackModel
+    // Get model from API key data or use default, ensuring no redeclaration
+    if (!apiKeyData?.model) {
+        const model = 'gemini-2.0-flash-exp';
     }
-
-    if (!genAI) {
+    // Use fallback model from API key data or default
+    const modelFallback = apiKeyData?.fallback_model || 'gemini-1.5-flash-latest';
+    if (!key) {
         return "Erro: Nenhuma chave da API configurada. Por favor, configure uma chave nas configurações do aplicativo.";
     }
-
-    try {
-        // Verifica cancelamento antes de iniciar
-        if (signal && signal.aborted) {
-            throw new Error('Operação cancelada');
-        }
-        
-        const { primaryModel, fallbackModel } = await getModelWithFallback();
-        
-        // NOVO: Lógica dinâmica para buscar o prompt
-        const customPrompts = await settingsService.getCustomPrompts();
-        const promptTemplate = customPrompts[mode] || defaultPrompts[mode];
-        
-        if (!promptTemplate) {
-            return `Erro: Modo '${mode}' não reconhecido ou sem prompt definido.`;
-        }
-
-        // Verifica cancelamento antes da chamada da API
-        if (signal && signal.aborted) {
-            throw new Error('Operação cancelada');
-        }
-
-        // Monta o prompt final
-        const prompt = `${promptTemplate} "${text}"`;
-
-        // NOVO: Operação com fallback
-        const operation = async (modelName) => {
-            const model = genAI.getGenerativeModel({ model: modelName });
-            const aiPromise = model.generateContent(prompt);
-            
-            if (signal) {
-                const cancelPromise = new Promise((_, reject) => {
-                    signal.addEventListener('abort', () => {
-                        reject(new Error('Operação cancelada'));
-                    });
-                });
-                return await Promise.race([aiPromise, cancelPromise]);
-            } else {
-                return await aiPromise;
-            }
-        };
-        
-        const result = await executeWithFallback(operation, primaryModel, fallbackModel);
-        const response = await result.response;
-        let aiText = response.text();
-        
-        // Remove formatação markdown se for modo destaque
-        if (mode === 'destaque') {
-            aiText = aiText.replace(/```json\s*|```\s*|`/g, '');
-            aiText = aiText.trim();
-            
-            if (!aiText.startsWith('{') || !aiText.endsWith('}')) {
-                throw new Error('Resposta da IA não está no formato JSON esperado');
-            }
-        }
-        
-        console.log('Resposta do Gemini recebida com sucesso.');
-        return aiText;
-
-    } catch (error) {
-        if (error.message.includes('cancelada') || error.message.includes('Operação cancelada')) {
-            throw new Error('IA cancelada pelo usuário');
-        }
-        
-        // NOVO: Tratamento específico para erro de quota
-        if (error.status === 429) {
-            return "⚠️ Limite diário da API atingido. Tente novamente amanhã ou considere fazer upgrade do plano. Para mais informações: https://ai.google.dev/gemini-api/docs/rate-limits";
-        }
-        
-        console.error('Erro ao chamar a API do Google AI:', error);
-        return `Ocorreu um erro ao conectar com o Gemini. Detalhes: ${error.message}`;
-    }
+    const genAI = new GoogleGenerativeAI(key);
+    const { model = 'gemini-2.0-flash-exp', fallbackModel = 'gemini-1.5-flash-latest' } = apiSettings;
+    // ... rest of your prompt/template/model fallback logic ...
 }
 
+// Substituir a função testApiKey (linha ~290)
 async function testApiKey(apiSettings) {
     try {
-        const genAI = new GoogleGenerativeAI(apiSettings.key);
-        const { primaryModel, fallbackModel } = await getModelWithFallback();
+        console.log('Testando API com configurações:', apiSettings);
         
-        const operation = async (modelName) => {
-            const model = genAI.getGenerativeModel({ model: modelName });
-            const result = await model.generateContent("Test");
-            await result.response;
-            return { success: true, model: modelName };
+        // Aceitar tanto o formato antigo quanto o novo
+        const key = apiSettings.key || apiSettings.apiKey;
+        const model = apiSettings.model || 'gemini-2.0-flash-exp';
+        
+        if (!key) {
+            return {
+                success: false,
+                error: 'Chave da API não fornecida'
+            };
+        }
+        
+        const genAI = new GoogleGenerativeAI(key);
+        
+        // Usar o modelo especificado ou fallback
+        const testModel = genAI.getGenerativeModel({ model: model });
+        
+        // Teste simples com prompt mínimo
+        const result = await testModel.generateContent("Teste de conectividade. Responda apenas 'OK'.");
+        const response = await result.response;
+        const text = response.text();
+        
+        console.log('Teste bem-sucedido:', text);
+        
+        return { 
+            success: true, 
+            model: model,
+            response: text.trim()
         };
         
-        return await executeWithFallback(operation, primaryModel, fallbackModel);
-        
     } catch (error) {
+        console.error('Erro no teste da API:', error);
+        
+        // Tratamento específico de erros
+        let errorMessage = error.message || 'Erro desconhecido';
+        
+        if (error.status === 400) {
+            errorMessage = 'Chave da API inválida ou modelo não suportado';
+        } else if (error.status === 403) {
+            errorMessage = 'Acesso negado - verifique sua chave da API';
+        } else if (error.status === 429) {
+            errorMessage = 'Limite de requisições atingido';
+        } else if (error.message.includes('API_KEY_INVALID')) {
+            errorMessage = 'Chave da API inválida';
+        } else if (error.message.includes('model not found')) {
+            errorMessage = 'Modelo não encontrado - tente um modelo diferente';
+        }
+        
         return { 
             success: false, 
-            error: error.message || 'Erro ao validar a chave da API'
+            error: errorMessage
         };
     }
 }
@@ -289,6 +366,29 @@ async function analyzeWithContextCheck({ text, mode, conversationHistory = [], s
     }
 }
 
+// Função para verificar se a resposta indica necessidade de mais contexto
+function needsMoreContext(response) {
+    const contextIndicators = [
+        'preciso de mais informações',
+        'mais contexto',
+        'informações adicionais',
+        'não tenho informações suficientes',
+        'poderia fornecer mais detalhes',
+        'falta contexto',
+        'mais detalhes',
+        'informações específicas',
+        'contexto adicional'
+    ];
+    
+    const lowerResponse = response.toLowerCase();
+    return contextIndicators.some(indicator => lowerResponse.includes(indicator));
+}
+
+// Função para obter os prompts padrão
+function getDefaultPrompts() {
+    return defaultPrompts;
+}
+
 // Inicializa o serviço de AI
 initializeAI();
 
@@ -323,3 +423,101 @@ const retryWithBackoff = async (fn, maxRetries = 3) => {
     }
   }
 };
+
+// Função para processar nível de profundidade no prompt
+function processPromptWithDepthLevel(prompt, depthLevel = 'intermediario') {
+    return prompt.replace('{DEPTH_LEVEL}', depthLevel.toUpperCase());
+}
+
+// Modificar a função getAIResponse para incluir nível
+async function getAIResponse(prompt, screenshot = null, mode = 'directo', depthLevel = 'intermediario') {
+    if (!genAI) {
+        await initializeAI();
+    }
+
+    if (!genAI) {
+        return "Erro: Nenhuma chave da API configurada. Por favor, configure uma chave nas configurações do aplicativo.";
+    }
+
+    try {
+        // Verifica cancelamento antes de iniciar
+        if (signal && signal.aborted) {
+            throw new Error('Operação cancelada');
+        }
+        
+        const { primaryModel, fallbackModel } = await getModelWithFallback();
+        
+        // NOVO: Lógica dinâmica para buscar o prompt
+        const customPrompts = await settingsService.getCustomPrompts();
+        const promptTemplate = customPrompts[mode] || defaultPrompts[mode];
+        
+        if (!promptTemplate) {
+            return `Erro: Modo '${mode}' não reconhecido ou sem prompt definido.`;
+        }
+
+        // Verifica cancelamento antes da chamada da API
+        if (signal && signal.aborted) {
+            throw new Error('Operação cancelada');
+        }
+
+        // Monta o prompt final
+        const prompt = `${promptTemplate} "${text}"`;
+
+        // NOVO: Operação com fallback
+        const operation = async (modelName) => {
+            const model = genAI.getGenerativeModel({ model: modelName });
+            const aiPromise = model.generateContent(prompt);
+            
+            if (signal) {
+                const cancelPromise = new Promise((_, reject) => {
+                    signal.addEventListener('abort', () => {
+                        reject(new Error('Operação cancelada'));
+                    });
+                });
+                return await Promise.race([aiPromise, cancelPromise]);
+            } else {
+                return await aiPromise;
+            }
+        };
+        
+        const result = await executeWithFallback(operation, primaryModel, fallbackModel);
+        const response = await result.response;
+        let aiText = response.text();
+        
+        // Remove formatação markdown se for modo destaque
+        if (mode === 'destaque') {
+            aiText = aiText.replace(/```json\s*|```\s*|`/g, '');
+            aiText = aiText.trim();
+            
+            if (!aiText.startsWith('{') || !aiText.endsWith('}')) {
+                throw new Error('Resposta da IA não está no formato JSON esperado');
+            }
+        }
+        
+        console.log('Resposta do Gemini recebida com sucesso.');
+        return aiText;
+
+    } catch (error) {
+        if (error.message.includes('cancelada') || error.message.includes('Operação cancelada')) {
+            throw new Error('IA cancelada pelo usuário');
+        }
+        
+        // NOVO: Tratamento específico para erro de quota
+        if (error.status === 429) {
+            return "⚠️ Limite diário da API atingido. Tente novamente amanhã ou considere fazer upgrade do plano. Para mais informações: https://ai.google.dev/gemini-api/docs/rate-limits";
+        }
+        
+        console.error('Erro ao chamar a API do Google AI:', error);
+        return `Ocorreu um erro ao conectar com o Gemini. Detalhes: ${error.message}`;
+    }
+}
+const { getApiKey } = require('./database-service');
+
+async function getAIResponse(provider, prompt) {
+    const apiData = await getApiKey(provider);
+    if (!apiData || !apiData.api_key) {
+        throw new Error('Nenhuma chave API configurada para o provedor selecionado.');
+    }
+    // Use apiData.api_key, apiData.model, apiData.fallback_model conforme necessário
+    // ... lógica de chamada da IA ...
+}

@@ -32,6 +32,44 @@
             </div>
         </header>
 
+        <!-- Barra de Controles -->
+        <div id="controls-bar" class="flex items-center justify-between p-3 bg-gray-850 border-b border-gray-700">
+            <div class="flex items-center gap-4">
+                <!-- Seletor de Nível -->
+                <div class="flex items-center gap-2">
+                    <label for="depth-level" class="text-sm text-gray-300 font-medium">Nível:</label>
+                    <select id="depth-level" class="bg-gray-700 border border-gray-600 text-gray-100 text-sm rounded-lg px-3 py-1.5 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="auto">🤖 Automático</option>
+                        <option value="basico">🌱 Básico</option>
+                        <option value="intermediario">🌿 Intermediário</option>
+                        <option value="avancado">🌳 Avançado</option>
+                        <option value="tutor">👨‍🏫 Tutor</option>
+                    </select>
+                </div>
+                
+                <!-- Indicador de Contexto -->
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-400">Contexto:</span>
+                    <div id="context-indicator" class="flex items-center gap-1">
+                        <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                        <span id="context-status" class="text-xs text-gray-400">Detectando...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Métricas de Progresso -->
+            <div class="flex items-center gap-4 text-xs text-gray-400">
+                <div class="flex items-center gap-1">
+                    <span>💡</span>
+                    <span id="tips-count">0 dicas</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <span>🎯</span>
+                    <span id="progress-indicator">0% progresso</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Content Area -->
         <div class="flex flex-1 min-h-0 overflow-hidden bg-gray-900">
             <!-- Área Principal de Sugestões -->

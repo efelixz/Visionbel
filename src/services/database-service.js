@@ -38,6 +38,14 @@ function initDatabase() {
                 console.log("Coluna 'mode' pronta.");
             }
         });
+        db.run(`
+            CREATE TABLE IF NOT EXISTS api_keys (
+                provider TEXT PRIMARY KEY,
+                api_key TEXT NOT NULL,
+                model TEXT,
+                fallback_model TEXT
+            )
+        `);
     });
 }
 
@@ -176,5 +184,33 @@ module.exports = {
     deleteHistoryItem,
     deleteMultipleHistoryItems,
     clearAllHistory,
-    deleteHistoryOlderThan
+    deleteHistoryOlderThan,
+    setApiKey, // <-- add this
+    getApiKey  // <-- add this
 };
+
+function setApiKey(provider, apiKey, model = null, fallbackModel = null) {
+    return new Promise((resolve, reject) => {
+        db.run(
+            `INSERT OR REPLACE INTO api_keys (provider, api_key, model, fallback_model) VALUES (?, ?, ?, ?)`,
+            [provider, apiKey, model, fallbackModel],
+            function(err) {
+                if (err) reject(err);
+                else resolve(true);
+            }
+        );
+    });
+}
+
+function getApiKey(provider) {
+    return new Promise((resolve, reject) => {
+        db.get(
+            `SELECT api_key, model, fallback_model FROM api_keys WHERE provider = ?`,
+            [provider],
+            (err, row) => {
+                if (err) reject(err);
+                else resolve(row);
+            }
+        );
+    });
+}

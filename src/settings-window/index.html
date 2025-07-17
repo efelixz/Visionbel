@@ -1,310 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Configurações - SkillVision™</title>
-    <link rel="stylesheet" href="../styles/output.css">
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações - SkillVision</title>
+    <link rel="stylesheet" href="../styles/tailwind.css">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans antialiased transition-colors duration-300 min-h-screen">
-    
-    <div class="min-h-screen p-4 sm:p-6 lg:p-8">
-        <div class="max-w-6xl mx-auto">
-            <!-- Header Clean -->
-            <header class="mb-6 lg:mb-8">
-                <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 bg-blue-600 dark:bg-blue-500 rounded-xl flex items-center justify-center">
-                        <span class="text-white font-semibold text-xl">⚙️</span>
-                    </div>
-                    <div>
-                        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
-                            Configurações
-                        </h1>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Personalize o comportamento do sistema</p>
-                    </div>
-                </div>
-            </header>
-            
-            <!-- Configuração do Modo Padrão -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 lg:p-8 mb-6 lg:mb-8 transition-colors duration-300 shadow-sm">
-                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 lg:mb-6">
-                    🎯 Modo de Operação Padrão
-                </h2>
-                
-                <div class="">
-                    <label for="default-mode-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Selecione o modo padrão:</label>
-                    <div class="relative">
-                        <!-- No seletor de modo padrão -->
-                        <select id="default-mode-select" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 appearance-none">
-                            <option value="destaque" class="bg-white dark:bg-gray-700">✨ Destaque Inteligente</option>
-                            <option value="sugestao" class="bg-white dark:bg-gray-700">💡 Sugestões</option>
-                            <option value="autocorrecao" class="bg-white dark:bg-gray-700">🤖 AutoCorreção de Código</option>
-                            <option value="directo" class="bg-white dark:bg-gray-700">🎯 Resposta Direta</option>
-                            <option value="etico" class="bg-white dark:bg-gray-700">🛡️ Modo Ético</option>
-                            <option value="shadow" class="bg-white dark:bg-gray-700">👤 Modo Shadow</option>
-                            <option value="raciocinio" class="bg-white dark:bg-gray-700">💭 Raciocínio</option>
-                        </select>
-                        
-                        <!-- No seletor do Editor de Comportamento -->
-                        <select id="mode-prompt-select" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 appearance-none">
-                            <option value="destaque" class="bg-white dark:bg-gray-700">✨ Destaque Inteligente</option>
-                            <option value="sugestao" class="bg-white dark:bg-gray-700">💡 Sugestões</option>
-                            <option value="autocorrecao" class="bg-white dark:bg-gray-700">🤖 AutoCorreção</option>
-                            <option value="directo" class="bg-white dark:bg-gray-700">🎯 Resposta Direta</option>
-                            <option value="etico" class="bg-white dark:bg-gray-700">🛡️ Modo Ético</option>
-                            <option value="shadow" class="bg-white dark:bg-gray-700">👤 Modo Shadow</option>
-                            <option value="raciocinio" class="bg-white dark:bg-gray-700">💭 Raciocínio</option>
-                        </select>
-                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <svg class="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Editor de Comportamento da IA -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 lg:p-8 transition-colors duration-300 shadow-sm">
-                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 lg:mb-6">
-                    🤖 Editor de Comportamento
-                </h2>
-                
-                <div class=" space-y-4 lg:space-y-6">
-                    <div>
-                        <label for="mode-prompt-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Modo para edição:</label>
-                        <div class="relative">
-                            <select id="mode-prompt-select" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 appearance-none">
-                                <option value="destaque" class="bg-white dark:bg-gray-700">✨ Destaque Inteligente</option>
-                                <option value="sugestao" class="bg-white dark:bg-gray-700">💡 Sugestões</option>
-                                <option value="autocorrecao" class="bg-white dark:bg-gray-700">🤖 AutoCorreção</option>
-                                <option value="etico" class="bg-white dark:bg-gray-700">🛡️ Modo Ético</option>
-                                <option value="directo" class="bg-white dark:bg-gray-700">🎯 Resposta Direta</option>
-                            </select>
-                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                                <svg class="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label for="prompt-editor" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Prompt personalizado:</label>
-                        <div class="relative">
-                            <textarea id="prompt-editor" rows="12" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 resize-none" placeholder="Digite o prompt personalizado aqui...\nExemplo: Você é um assistente especializado em..."></textarea>
-                        </div>
-                    </div>
-                    
-                    <div class="button-group flex flex-col sm:flex-row gap-3 sm:gap-4">
-                        <button id="savePromptBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2">
-                            <span>💾</span>
-                            Salvar Configuração
-                        </button>
-                        <button id="resetPromptBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2">
-                            <span>🔄</span>
-                            Resetar Padrão
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Substituir a seção de Configuração da API -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 lg:p-8 mb-6 lg:mb-8 transition-colors duration-300 shadow-sm">
-                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 lg:mb-6">
-                    🤖 Configuração de Provedores de IA
-                </h2>
-                
-                <div class="space-y-6">
-                    <!-- Seleção do Provedor Principal -->
-                    <div>
-                        <label for="ai-provider-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Provedor Principal:</label>
-                        <div class="relative">
-                            <select id="ai-provider-select" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 appearance-none">
-                                <option value="gemini" class="bg-white dark:bg-gray-700">🔷 Google Gemini</option>
-                                <option value="openai" class="bg-white dark:bg-gray-700">🟢 OpenAI ChatGPT</option>
-                                <option value="anthropic" class="bg-white dark:bg-gray-700">🟠 Anthropic Claude</option>
-                                <option value="cohere" class="bg-white dark:bg-gray-700">🔵 Cohere</option>
-                            </select>
-                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                                <svg class="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Configurações do Gemini -->
-                    <div id="gemini-config" class="provider-config">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">🔷 Configuração do Google Gemini</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label for="gemini-key" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Chave da API:</label>
-                                <input type="password" id="gemini-key" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200" placeholder="Digite sua chave do Gemini...">
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="gemini-primary-model" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Modelo Principal:</label>
-                                    <select id="gemini-primary-model" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 appearance-none">
-                                        <option value="gemini-2.0-flash-exp">🚀 Gemini 2.0 Flash (Experimental)</option>
-                                        <option value="gemini-1.5-flash-latest">⚡ Gemini 1.5 Flash (Estável)</option>
-                                        <option value="gemini-1.5-pro-latest">💎 Gemini 1.5 Pro (Avançado)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="gemini-fallback-model" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Modelo Fallback:</label>
-                                    <select id="gemini-fallback-model" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 appearance-none">
-                                        <option value="gemini-1.5-flash-latest">⚡ Gemini 1.5 Flash (Recomendado)</option>
-                                        <option value="gemini-1.5-pro-latest">💎 Gemini 1.5 Pro</option>
-                                        <option value="gemini-2.0-flash-exp">🚀 Gemini 2.0 Flash</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <button id="test-gemini-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">🧪 Testar Gemini</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Configurações do OpenAI -->
-                    <div id="openai-config" class="provider-config hidden">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">🟢 Configuração do OpenAI</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label for="openai-key" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Chave da API:</label>
-                                <input type="password" id="openai-key" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200" placeholder="Digite sua chave do OpenAI...">
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="openai-primary-model" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Modelo Principal:</label>
-                                    <select id="openai-primary-model" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 appearance-none">
-                                        <option value="gpt-4o">🧠 GPT-4o (Mais Avançado)</option>
-                                        <option value="gpt-4o-mini">⚡ GPT-4o Mini (Rápido)</option>
-                                        <option value="gpt-4-turbo">💎 GPT-4 Turbo</option>
-                                        <option value="gpt-3.5-turbo">💰 GPT-3.5 Turbo (Econômico)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="openai-fallback-model" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Modelo Fallback:</label>
-                                    <select id="openai-fallback-model" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 appearance-none">
-                                        <option value="gpt-3.5-turbo">💰 GPT-3.5 Turbo (Recomendado)</option>
-                                        <option value="gpt-4o-mini">⚡ GPT-4o Mini</option>
-                                        <option value="gpt-4-turbo">💎 GPT-4 Turbo</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <button id="test-openai-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">🧪 Testar OpenAI</button>
-                            <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-                                <p class="text-sm text-yellow-700 dark:text-yellow-300">⚠️ OpenAI será implementado em breve</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Configurações do Anthropic -->
-                    <div id="anthropic-config" class="provider-config hidden">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">🟠 Configuração do Anthropic Claude</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label for="anthropic-key" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Chave da API:</label>
-                                <input type="password" id="anthropic-key" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200" placeholder="Digite sua chave do Anthropic...">
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="anthropic-primary-model" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Modelo Principal:</label>
-                                    <select id="anthropic-primary-model" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 appearance-none">
-                                        <option value="claude-3-5-sonnet-20241022">🎭 Claude 3.5 Sonnet (Mais Recente)</option>
-                                        <option value="claude-3-5-haiku-20241022">⚡ Claude 3.5 Haiku (Rápido)</option>
-                                        <option value="claude-3-opus-20240229">💎 Claude 3 Opus (Mais Poderoso)</option>
-                                        <option value="claude-3-haiku-20240307">💰 Claude 3 Haiku (Econômico)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="anthropic-fallback-model" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Modelo Fallback:</label>
-                                    <select id="anthropic-fallback-model" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 appearance-none">
-                                        <option value="claude-3-haiku-20240307">💰 Claude 3 Haiku (Recomendado)</option>
-                                        <option value="claude-3-5-haiku-20241022">⚡ Claude 3.5 Haiku</option>
-                                        <option value="claude-3-5-sonnet-20241022">🎭 Claude 3.5 Sonnet</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <button id="test-anthropic-btn" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">🧪 Testar Claude</button>
-                            <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-                                <p class="text-sm text-yellow-700 dark:text-yellow-300">⚠️ Anthropic será implementado em breve</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Configurações do Cohere -->
-                    <div id="cohere-config" class="provider-config hidden">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">🔵 Configuração do Cohere</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label for="cohere-key" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Chave da API:</label>
-                                <input type="password" id="cohere-key" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200" placeholder="Digite sua chave do Cohere...">
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="cohere-primary-model" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Modelo Principal:</label>
-                                    <select id="cohere-primary-model" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 appearance-none">
-                                        <option value="command-r-plus">🚀 Command R+ (Avançado)</option>
-                                        <option value="command-r">⚡ Command R (Padrão)</option>
-                                        <option value="command-light">💰 Command Light (Econômico)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="cohere-fallback-model" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Modelo Fallback:</label>
-                                    <select id="cohere-fallback-model" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 appearance-none">
-                                        <option value="command-r">⚡ Command R (Recomendado)</option>
-                                        <option value="command-light">💰 Command Light</option>
-                                        <option value="command-r-plus">🚀 Command R+</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <button id="test-cohere-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">🧪 Testar Cohere</button>
-                            <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-                                <p class="text-sm text-yellow-700 dark:text-yellow-300">⚠️ Cohere será implementado em breve</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Botão para salvar configurações -->
-                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <button id="save-ai-config-btn" class="w-full bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2">
-                            <span>💾</span>
-                            Salvar Configurações de IA
-                        </button>
-                    </div>
-                    
-                    <!-- Status das configurações -->
-                    <div id="ai-config-status" class="text-sm text-gray-500 dark:text-gray-400 text-center"></div>
-                </div>
+<body class="bg-cyber-dark text-white p-6">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6 text-neon-blue">Configurações da API</h1>
+        
+        <!-- Seleção de Provedor -->
+        <div class="mb-6">
+            <label class="block text-sm font-medium mb-2">Provedor de IA</label>
+            <select id="provider-select" class="w-full bg-cyber-light border border-neon-blue rounded p-2">
+                <option value="gemini">Google Gemini</option>
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic Claude</option>
+                <option value="cohere">Cohere</option>
+            </select>
+        </div>
+
+        <!-- Configuração da Chave API -->
+        <div class="mb-6">
+            <label class="block text-sm font-medium mb-2">Chave da API</label>
+            <div class="flex gap-2">
+                <input type="password" id="api-key-input" 
+                       class="flex-1 bg-cyber-light border border-neon-blue rounded p-2" 
+                       placeholder="Digite sua chave da API">
+                <button id="toggle-key" 
+                        class="px-3 py-2 bg-cyber-light border border-neon-purple rounded hover:bg-neon-purple/20">
+                    👁️
+                </button>
             </div>
         </div>
+
+        <!-- Seleção de Modelo -->
+        <div class="mb-6">
+            <label class="block text-sm font-medium mb-2">Modelo</label>
+            <select id="model-select" class="w-full bg-cyber-light border border-neon-blue rounded p-2"></select>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="flex gap-4">
+            <button id="test-button" 
+                    class="flex-1 px-4 py-2 bg-neon-blue/20 border border-neon-blue rounded hover:bg-neon-blue/30">
+                Testar Conexão
+            </button>
+            <button id="save-button" 
+                    class="flex-1 px-4 py-2 bg-neon-green/20 border border-neon-green rounded hover:bg-neon-green/30">
+                Salvar Configurações
+            </button>
+        </div>
+
+        <!-- Status/Feedback -->
+        <div id="status-message" class="mt-4 p-4 rounded hidden">
+            <!-- Preenchido via JavaScript -->
+        </div>
     </div>
-    
     <script src="renderer.js"></script>
-    <script>
-        // Theme Toggle Functionality
-        const html = document.documentElement;
-        
-        // MODIFICADO: Check for saved theme preference or default to DARK mode
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        if (savedTheme === 'dark') {
-            html.classList.add('dark');
-        } else {
-            html.classList.remove('dark');
-        }
-        
-        // Listen for theme changes from main window
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'theme') {
-                if (e.newValue === 'dark') {
-                    html.classList.add('dark');
-                } else {
-                    html.classList.remove('dark');
-                }
-            }
-        });
-    </script>
 </body>
 </html>

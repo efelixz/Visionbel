@@ -6,10 +6,11 @@ const os = require('os');
 const ks = require('node-key-sender');
 const settingsService = require('../services/settings-service');
 const automationService = require('../services/automation-service');
-
+const aiService = require('../services/multi-ai-service.js');
 // MODIFICADO: Importamos o serviço completo para usar ambas as funções
 const ocrService = require('../services/ocr-service');
-const { getAIResponse, getDefaultPrompts, testApiKey, needsMoreContext, analyzeWithContextCheck } = require('../services/ai-service');
+const { getAIResponse, getDefaultPrompts, needsMoreContext, analyzeWithContextCheck } = require('../services/ai-service');
+const { testApiKey } = require('../services/multi-ai-service');
 const dbService = require('../services/database-service');
 
 let mainWindow;
@@ -295,13 +296,19 @@ ipcMain.handle('set-api-settings', async (event, settings) => {
 });
 
 // Adicionar o novo handler test-api-key
-ipcMain.handle('test-api-key', async (event, settings) => {
+ipcMain.handle('test-api-key', async (event, { provider, key, model }) => {
     try {
-        const result = await testApiKey(settings);
+        console.log(`Testando ${provider} com modelo ${model}`);
+        
+        // Modificar esta chamada para passar os parâmetros separadamente
+        const result = await testApiKey(provider, key, model);
+        console.log('Resultado do teste:', result);
+        
         return result;
     } catch (error) {
-        return { 
-            success: false, 
+        console.error('Erro ao testar API:', error);
+        return {
+            success: false,
             error: error.message || 'Erro ao validar a chave da API'
         };
     }
@@ -913,7 +920,9 @@ app.on('window-all-closed', () => {
     }
 });
 
-
+ipcMain.handle('get-available-providers', () => {
+    return aiService.getAvailableProviders();
+});
 
 // Mantidos os handlers existentes para outras funcionalidades
 ipcMain.handle('start-full-flow', async (event, mode) => {
