@@ -12,5 +12,11 @@ contextBridge.exposeInMainWorld('suggestionAPI', {
     // Eventos para chat e verificação de contexto
     onChatLoading: (callback) => ipcRenderer.on('chat-loading', callback),
     onChatResponse: (callback) => ipcRenderer.on('chat-response', callback),
-    onShowInteractionArea: (callback) => ipcRenderer.on('show-interaction-area', callback)
+    onShowInteractionArea: (callback) => ipcRenderer.on('show-interaction-area', callback),
+    // Métodos para remover listeners (para limpeza)
+    removeChatLoadingListener: (callback) => ipcRenderer.removeListener('chat-loading', callback),
+    removeChatResponseListener: (callback) => ipcRenderer.removeListener('chat-response', callback),
+    removeShowInteractionListener: (callback) => ipcRenderer.removeListener('show-interaction-area', callback),
+    // Função para enviar mensagens de chat
+    sendChatMessage: (prompt) => ipcRenderer.invoke('send-chat-message', prompt)
 });

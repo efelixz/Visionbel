@@ -9,7 +9,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body class="bg-transparent">
-    <div id="container" class="flex flex-col items-center justify-center h-full">
+    <!-- Área de arraste invisível -->
+    <div id="drag-area" class="absolute top-0 left-0 w-full h-8 cursor-move z-10" style="-webkit-app-region: drag;"></div>
+    
+    <div id="container" class="flex flex-col items-center justify-center h-full relative">
         <!-- Ícone animado -->
         <div class="thinking-icon mb-4">
             <div class="brain-container">
@@ -33,5 +36,7 @@
             <div class="progress-fill"></div>
         </div>
     </div>
+    
+    <script src="renderer.js"></script>
 </body>
 </html>

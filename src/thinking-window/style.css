@@ -122,3 +122,39 @@ body {
 #container {
     animation: slideIn 0.3s ease-out;
 }
+
+
+/* Área de arraste */
+#drag-area {
+    background: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Efeito visual quando arrastando */
+.dragging {
+    opacity: 0.8;
+    transform: scale(0.98);
+    transition: all 0.1s ease;
+}
+
+/* Cursor personalizado */
+.cursor-grab {
+    cursor: grab;
+}
+
+.cursor-grabbing {
+    cursor: grabbing;
+}
+
+/* Melhora a área clicável */
+#container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Indicador visual sutil de que é arrastável */
+#drag-area:hover + #container {
+    transform: translateY(-1px);
+    transition: transform 0.2s ease;
+}

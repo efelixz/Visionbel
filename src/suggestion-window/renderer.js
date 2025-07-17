@@ -232,11 +232,9 @@ if (sendContextBtn) {
         const additionalContext = contextInput.value.trim();
         if (additionalContext) {
             console.log('Enviando contexto:', additionalContext); // Debug
-            // Adiciona mensagem do usuário
-            addChatMessage(additionalContext, true);
             
-            // Envia contexto para o backend
-            window.suggestionAPI.sendAdditionalContext(additionalContext);
+            // CORRIGIDO: Usar sendChatMessage em vez de sendAdditionalContext
+            sendChatMessage(additionalContext, 'Processando mensagem...');
             
             // Limpa o campo de input
             contextInput.value = '';
@@ -262,8 +260,9 @@ if (interactionSendBtn) {
         e.preventDefault();
         const additionalContext = interactionInput.value.trim();
         if (additionalContext) {
-            addChatMessage(additionalContext, true);
-            window.suggestionAPI.sendAdditionalContext(additionalContext);
+            // CORRIGIDO: Usar sendChatMessage também aqui para consistência
+            sendChatMessage(additionalContext, 'Processando mensagem...');
+            
             interactionInput.value = '';
             interactionArea.classList.add('hidden');
             resetInactivityTimer();
@@ -330,6 +329,8 @@ function detectTechnicalTerms(content) {
 }
 
 function requestConceptExplanation(term) {
+    updateProgressMetrics('concept_explained');
+    
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'concept-loading';
     loadingDiv.textContent = `Explicando "${term}"...`;
@@ -346,36 +347,30 @@ function requestConceptExplanation(term) {
     - Exemplo prático
     - Quando usar
     
-    Mantenha a explicação concisa mas completa, adequada para estudantes.`;
+    Mantenha a explicação adequada ao nível: ${currentDepthLevel}`;
     
-    window.electronAPI.sendChatMessage(prompt)
-        .then(response => {
-            if (loadingDiv.parentNode) {
-                loadingDiv.remove();
-            }
-            
-            const explanationDiv = document.createElement('div');
-            explanationDiv.className = 'concept-explanation';
-            explanationDiv.innerHTML = `
-                <h4>💡 ${term}</h4>
-                <div>${formatContent(response)}</div>
-            `;
-            
-            if (conceptSection) {
-                conceptSection.appendChild(explanationDiv);
-            }
-            
-            addToChatHistory(`Explicação: ${term}`, response);
-        })
-        .catch(error => {
-            if (loadingDiv.parentNode) {
-                loadingDiv.remove();
-            }
-            console.error('Erro ao explicar conceito:', error);
-        });
+    sendChatMessage(prompt, `Explicando conceito: ${term}...`).then(response => {
+        // Remove loading
+        if (loadingDiv && loadingDiv.parentNode) {
+            loadingDiv.remove();
+        }
+        
+        // Adiciona explicação ao chat
+        addChatMessage(`📚 **Conceito: ${term}**\n\n${response}`, false);
+        
+        // Adiciona ao histórico
+        addToChatHistory(`Explique: ${term}`, response);
+    }).catch(error => {
+        console.error('Erro ao explicar conceito:', error);
+        if (loadingDiv && loadingDiv.parentNode) {
+            loadingDiv.remove();
+        }
+    });
 }
 
 function requestAlternativeApproach() {
+    updateProgressMetrics('alternative_approach');
+    
     const prompt = `Com base no problema apresentado, sugira uma abordagem alternativa de solução. 
     Inclua:
     - Método diferente
@@ -421,40 +416,36 @@ function requestTipHistory() {
     }
 }
 
-// Função auxiliar para enviar mensagens de chat
+// CORRIGIDO: Atualizar função sendChatMessage para usar o chat area corretamente
 function sendChatMessage(prompt, loadingMessage) {
-    // Adiciona mensagem de carregamento
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'concept-loading';
-    loadingDiv.textContent = loadingMessage;
+    // Adiciona mensagem do usuário ao chat
+    addChatMessage(prompt, true);
     
-    const suggestionsContent = document.getElementById('suggestions-content');
-    if (suggestionsContent) {
-        suggestionsContent.appendChild(loadingDiv);
+    // Adiciona mensagem de carregamento ao chat
+    if (loadingMessage) {
+        addLoadingMessage();
     }
     
-    // Envia para o chat
-    window.electronAPI.sendChatMessage(prompt)
+    // Envia para o chat usando a API correta
+    window.suggestionAPI.sendChatMessage(prompt)
         .then(response => {
-            if (loadingDiv.parentNode) {
-                loadingDiv.remove();
-            }
+            // Remove loading message
+            removeLoadingMessage();
             
-            const responseDiv = document.createElement('div');
-            responseDiv.className = 'concept-explanation';
-            responseDiv.innerHTML = formatContent(response);
+            // Adiciona resposta da IA ao chat
+            addChatMessage(response, false);
             
-            if (suggestionsContent) {
-                suggestionsContent.appendChild(responseDiv);
-            }
-            
-            addToChatHistory(prompt, response);
+            // Mostra a área de chat se estiver oculta
+            document.getElementById('chat-area').classList.remove('hidden');
         })
         .catch(error => {
-            if (loadingDiv.parentNode) {
-                loadingDiv.remove();
-            }
+            // Remove loading message
+            removeLoadingMessage();
+            
             console.error('Erro ao processar solicitação:', error);
+            
+            // Mostrar mensagem de erro no chat
+            addChatMessage('❌ Erro ao processar solicitação. Tente novamente.', false);
         });
 }
 
@@ -628,59 +619,27 @@ window.suggestionAPI.onReceiveSuggestions((event, { suggestions, mode }) => {
     resetInactivityTimer();
 });
 
-// Monitora atividade do usuário
+// Configurar listeners apenas uma vez
+// REMOVIDO: Handlers IPC duplicados que causam confusão
+// Manter apenas os listeners essenciais
+if (!listenersInitialized) {
+// Event listeners para atividade do usuário
 document.addEventListener('mousemove', resetInactivityTimer);
 document.addEventListener('keypress', resetInactivityTimer);
 document.addEventListener('click', resetInactivityTimer);
 
+// Event listeners para drag and drop
+document.addEventListener('dragstart', handleDragStart);
+document.addEventListener('dragend', handleDragEnd);
+
+listenersInitialized = true;
+console.log('Listeners inicializados pela primeira vez');
+}
+
+
+
 // Configurar fechamento automático após carregar
 setupAutoClose();
-
-// Novos handlers para chat
-window.suggestionAPI.onChatLoading((event, isLoading) => {
-    if (!isLoading) {
-        removeLoadingMessage();
-    }
-});
-
-// Atualizar o handler de resposta do chat
-window.suggestionAPI.onChatResponse((event, { message, isUser, needsMoreContext, isComplete }) => {
-    removeLoadingMessage();
-    
-    if (isUser) {
-        addChatMessage(message, true);
-    } else {
-        addChatMessage(message, false);
-        
-        // Se ainda precisa de contexto, mantém a área de interação visível
-        if (needsMoreContext) {
-            showInteractionArea('A IA precisa de mais informações. Continue a conversa...');
-        }
-    }
-});
-
-// Handler para mostrar área de interação
-if (typeof window.suggestionAPI.onShowInteractionArea === 'function') {
-    window.suggestionAPI.onShowInteractionArea((event, { message }) => {
-        showInteractionArea(message);
-    });
-}
-
-// Handler para carregamento do chat
-if (typeof window.suggestionAPI.onChatLoading === 'function') {
-    window.suggestionAPI.onChatLoading((event, isLoading) => {
-        if (isLoading) {
-            addLoadingMessage();
-        } else {
-            removeLoadingMessage();
-        }
-    });
-}
-
-// Novo handler para mostrar área de interação
-window.suggestionAPI.onShowInteractionArea((event, { message }) => {
-    showInteractionArea(message);
-});
 
 // Variáveis globais para as novas funcionalidades
 let currentDepthLevel = 'auto';
@@ -691,6 +650,13 @@ let progressMetrics = {
     alternativeApproaches: 0,
     progressPercentage: 0
 };
+
+// Variável para controlar se os listeners já foram configurados
+let listenersInitialized = false;
+let dragEvent = null;
+let chatLoadingHandler = null;
+let chatResponseHandler = null;
+let showInteractionHandler = null;
 
 // Inicialização das novas funcionalidades
 function initializeEnhancedFeatures() {
@@ -725,17 +691,51 @@ function initializeContextDetection() {
     });
 }
 
-// Adicionar após as declarações de variáveis no início do arquivo
-let dragEvent = null;
+// Função para limpar todos os event listeners e timers
+function cleanup() {
+    // Limpar timers
+    if (closeTimeout) {
+        clearTimeout(closeTimeout);
+        closeTimeout = null;
+    }
+    if (inactivityTimeout) {
+        clearTimeout(inactivityTimeout);
+        inactivityTimeout = null;
+    }
+    
+    // Remover event listeners globais
+    document.removeEventListener('mousemove', resetInactivityTimer);
+    document.removeEventListener('keypress', resetInactivityTimer);
+    document.removeEventListener('click', resetInactivityTimer);
+    document.removeEventListener('dragstart', handleDragStart);
+    document.removeEventListener('dragend', handleDragEnd);
+    
+    // Remover handlers IPC se existirem
+    if (chatLoadingHandler) {
+        window.suggestionAPI.removeChatLoadingListener?.(chatLoadingHandler);
+        chatLoadingHandler = null;
+    }
+    if (chatResponseHandler) {
+        window.suggestionAPI.removeChatResponseListener?.(chatResponseHandler);
+        chatResponseHandler = null;
+    }
+    if (showInteractionHandler) {
+        window.suggestionAPI.removeShowInteractionListener?.(showInteractionHandler);
+        showInteractionHandler = null;
+    }
+    
+    listenersInitialized = false;
+    console.log('Cleanup executado - todos os listeners removidos');
+}
 
-// Adicionar os event listeners de drag and drop
-document.addEventListener('dragstart', (e) => {
+// Funções nomeadas para os handlers de drag
+function handleDragStart(e) {
     dragEvent = e;
-});
+}
 
-document.addEventListener('dragend', () => {
+function handleDragEnd() {
     dragEvent = null;
-});
+}
 
 // Análise de contexto da captura de tela
 async function detectContextFromScreenshot(screenshot) {
@@ -970,26 +970,26 @@ function hideLoadingState() {
     content.style.pointerEvents = 'auto';
 }
 
-// Modificar funções existentes para incluir rastreamento
-const originalRequestConceptExplanation = requestConceptExplanation;
-requestConceptExplanation = function(term) {
-    updateProgressMetrics('concept_explained');
-    return originalRequestConceptExplanation.call(this, term);
-};
+// Garantir limpeza ao fechar a janela
+window.addEventListener('beforeunload', cleanup);
+window.addEventListener('unload', cleanup);
 
-const originalRequestAlternativeApproach = requestAlternativeApproach;
-requestAlternativeApproach = function() {
-    updateProgressMetrics('alternative_approach');
-    return originalRequestAlternativeApproach.call(this);
-};
+// Adicionar limpeza quando a janela perde o foco (backup)
+window.addEventListener('blur', () => {
+    console.log('Janela perdeu foco - executando limpeza preventiva');
+    // Não fazer cleanup completo no blur, apenas limpar timers
+    if (closeTimeout) {
+        clearTimeout(closeTimeout);
+        closeTimeout = null;
+    }
+});
 
-const originalOnReceiveSuggestions = onReceiveSuggestions;
-onReceiveSuggestions = function(suggestions, mode = 'sugestao') {
-    updateProgressMetrics('tip_given');
-    return originalOnReceiveSuggestions.call(this, suggestions, mode);
-};
-
-// Inicializar quando o DOM estiver pronto
+// Modificar a inicialização
 document.addEventListener('DOMContentLoaded', () => {
+    // Limpar estado anterior se existir
+    cleanup();
+    
+    // Inicializar funcionalidades
     initializeEnhancedFeatures();
+    setupAutoClose();
 });

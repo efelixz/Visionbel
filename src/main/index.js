@@ -326,6 +326,7 @@ function createThinkingWindow(capturedRect) {
         alwaysOnTop: true,
         skipTaskbar: true,
         resizable: false,
+        movable: true, // Permite movimentação
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -333,6 +334,22 @@ function createThinkingWindow(capturedRect) {
     });
     
     thinkingWindow.loadFile('src/thinking-window/index.html');
+    
+    // Handler para mover a janela via IPC
+    const moveHandler = (event, { x, y }) => {
+        if (thinkingWindow && !thinkingWindow.isDestroyed()) {
+            thinkingWindow.setPosition(x, y);
+        }
+    };
+    
+    // Adiciona o listener
+    ipcMain.on('move-thinking-window', moveHandler);
+    
+    // Remove o listener quando a janela for fechada
+    thinkingWindow.on('closed', () => {
+        ipcMain.removeListener('move-thinking-window', moveHandler);
+    });
+    
     return thinkingWindow;
 }
 
@@ -639,14 +656,23 @@ async function executeFullCaptureFlow(mode) {
                 });
             });
             
-            ipcMain.once('close-suggestion-window', () => {
-                if (suggestionWindow && !suggestionWindow.isDestroyed()) {
-                    suggestionWindow.close();
-                }
+            suggestionWindow.on('closed', () => {
+                const windowId = suggestionWindow.id;
+                // Limpa o histórico da conversa e o texto original
+                conversationHistories.delete(windowId);
+                originalCapturedTexts.delete(windowId);
+                
                 // Garante que o thinkingWindow também seja fechado se ainda estiver aberto
                 if (thinkingWindow && !thinkingWindow.isDestroyed()) {
                     thinkingWindow.close();
                 }
+                
+                // Força garbage collection para liberar memória
+                if (global.gc) {
+                    global.gc();
+                }
+                
+                console.log(`Janela de sugestão ${windowId} fechada e recursos limpos`);
             });
         }
 
@@ -716,10 +742,12 @@ async function executeFullCaptureFlow(mode) {
                 });
             });
             
-            ipcMain.once('close-suggestion-window', () => {
-                if (responseWindow && !responseWindow.isDestroyed()) {
-                    responseWindow.close();
-                }
+            responseWindow.on('closed', () => {
+                const windowId = responseWindow.id;
+                // Limpa o histórico da conversa e o texto original
+                conversationHistories.delete(windowId);
+                originalCapturedTexts.delete(windowId);
+                
                 // Garante que o thinkingWindow também seja fechado se ainda estiver aberto
                 if (thinkingWindow && !thinkingWindow.isDestroyed()) {
                     thinkingWindow.close();
@@ -781,7 +809,7 @@ ipcMain.handle('get-analysis-state', () => {
     return { isRunning: isAnalysisRunning };
 });
 
-// Handler atualizado para contexto adicional com verificação contínua
+// Handler para contexto adicional
 ipcMain.on('send-additional-context', async (event, additionalContext) => {
     const currentWindow = BrowserWindow.fromWebContents(event.sender);
     const windowId = currentWindow.id;
@@ -810,8 +838,8 @@ ipcMain.on('send-additional-context', async (event, additionalContext) => {
             contextForAI = `Contexto original: "${originalText}"\n\nPergunta adicional: ${additionalContext}`;
         }
         
-        // Analisa com verificação de contexto
-        const analysis = await aiService.analyzeWithContextCheck({
+        // Analisa com o serviço de IA
+        const response = await aiService.getAIResponse({
             text: contextForAI,
             mode: 'sugestao',
             conversationHistory: history,
@@ -819,7 +847,7 @@ ipcMain.on('send-additional-context', async (event, additionalContext) => {
         });
         
         // Adiciona a resposta da IA ao histórico
-        history.push(analysis.response);
+        history.push(response);
         
         // Remove indicador de carregamento
         if (currentWindow && !currentWindow.isDestroyed()) {
@@ -827,18 +855,11 @@ ipcMain.on('send-additional-context', async (event, additionalContext) => {
             
             // Envia a resposta para o chat
             currentWindow.webContents.send('chat-response', {
-                message: analysis.response,
+                message: response,
                 isUser: false,
-                needsMoreContext: analysis.needsMoreContext,
-                isComplete: analysis.isComplete
+                needsMoreContext: false,
+                isComplete: true
             });
-            
-            // Se ainda precisa de contexto, mostra a área de interação
-            if (analysis.needsMoreContext) {
-                currentWindow.webContents.send('show-interaction-area', {
-                    message: 'Por favor, forneça mais informações para uma resposta mais precisa...'
-                });
-            }
         }
         
     } catch (error) {
@@ -1243,6 +1264,50 @@ ipcMain.handle('delete-history-older-than', async (event, date) => {
         return { success: false, message: 'Erro ao deletar registros antigos: ' + error.message };
     }
 });
+// NOVO: Handler para mensagens de chat
+ipcMain.handle('send-chat-message', async (event, prompt) => {
+    const currentWindow = BrowserWindow.fromWebContents(event.sender);
+    const windowId = currentWindow.id;
+    
+    try {
+        console.log('Processando mensagem de chat:', prompt);
+        
+        // Obtém o histórico da conversa
+        if (!conversationHistories.has(windowId)) {
+            conversationHistories.set(windowId, []);
+        }
+        const history = conversationHistories.get(windowId);
+        
+        // Adiciona a nova mensagem do usuário ao histórico
+        history.push(prompt);
+        
+        // Obtém o texto original se disponível
+        const originalText = originalCapturedTexts.get(windowId) || '';
+        
+        // Cria um contexto mais completo para a IA
+        let contextForAI = prompt;
+        if (originalText && history.length <= 5) { // Primeiras interações
+            contextForAI = `Contexto original: "${originalText}"\n\nSolicitação: ${prompt}`;
+        }
+        
+        // Usar o serviço de IA com contexto completo
+        const response = await aiService.getAIResponse({
+            text: contextForAI,
+            mode: 'sugestao',
+            conversationHistory: history,
+            signal: null
+        });
+        
+        // Adiciona a resposta da IA ao histórico
+        history.push(response);
+        
+        return response;
+    } catch (error) {
+        console.error('Erro ao processar mensagem de chat:', error);
+        throw error;
+    }
+});
+
 // Add these handlers after the other ipcMain.handle declarations
 ipcMain.handle('set-mode', async (event, mode) => {
     selectedMode = mode;
