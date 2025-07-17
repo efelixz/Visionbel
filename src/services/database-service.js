@@ -16,166 +16,15 @@ function initDatabase() {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 question_text TEXT NOT NULL,
                 response_text TEXT NOT NULL,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-
-        // NOVO: Adiciona a nova coluna se ela não existir.
-        // O "IGNORE" previne erros se a coluna já foi adicionada.
-        db.run("ALTER TABLE history ADD COLUMN duration_seconds INTEGER", (err) => {
-            if (err && !err.message.includes('duplicate column name')) {
-                console.error("Erro ao adicionar coluna 'duration_seconds':", err);
-            } else {
-                console.log("Coluna 'duration_seconds' pronta.");
-            }
-        });
-        
-        // NOVO: Adiciona a coluna de modo
-        db.run("ALTER TABLE history ADD COLUMN mode TEXT", (err) => {
-            if (err && !err.message.includes('duplicate column name')) {
-                console.error("Erro ao adicionar coluna 'mode':", err);
-            } else {
-                console.log("Coluna 'mode' pronta.");
-            }
-        });
-        db.run(`
-            CREATE TABLE IF NOT EXISTS api_keys (
-                provider TEXT PRIMARY KEY,
-                api_key TEXT NOT NULL,
-                model TEXT,
-                fallback_model TEXT
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                duration_seconds INTEGER,
+                mode TEXT
             )
         `);
     });
 }
 
-// MODIFICADO: para aceitar 'mode'
-function addHistory(question, response, duration, mode) {
-    const stmt = db.prepare("INSERT INTO history (question_text, response_text, duration_seconds, mode) VALUES (?, ?, ?, ?)");
-    stmt.run(question, response, duration, mode, (err) => {
-        if (err) {
-            return console.error("Erro ao salvar no histórico:", err.message);
-        }
-        console.log(`Novo registro salvo com sucesso. ID: ${stmt.lastID}`);
-    });
-    stmt.finalize();
-}
-
-// MODIFICADO: para buscar a nova coluna
-function getAllHistory() {
-    return new Promise((resolve, reject) => {
-        const query = "SELECT id, question_text, response_text, timestamp, duration_seconds, mode FROM history ORDER BY timestamp DESC";
-        db.all(query, [], (err, rows) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(rows);
-            }
-        });
-    });
-}
-
-/**
- * NOVO: Busca estatísticas de uso de cada modo.
- * @returns {Promise<Array<Object>>} Um array de objetos, ex: [{ mode: 'sugestao', count: 5 }]
- */
-function getModeUsageStats() {
-    return new Promise((resolve, reject) => {
-        const query = "SELECT mode, COUNT(*) as count FROM history WHERE mode IS NOT NULL GROUP BY mode";
-        db.all(query, [], (err, rows) => {
-            if (err) reject(err);
-            else resolve(rows);
-        });
-    });
-}
-
-/**
- * Deleta um registro específico do histórico
- * @param {number} id - ID do registro a ser deletado
- * @returns {Promise<boolean>} True se deletado com sucesso
- */
-function deleteHistoryItem(id) {
-    return new Promise((resolve, reject) => {
-        const stmt = db.prepare("DELETE FROM history WHERE id = ?");
-        stmt.run(id, function(err) {
-            if (err) {
-                console.error("Erro ao deletar registro:", err.message);
-                reject(err);
-            } else {
-                console.log(`Registro ${id} deletado. Linhas afetadas: ${this.changes}`);
-                resolve(this.changes > 0);
-            }
-        });
-        stmt.finalize();
-    });
-}
-
-/**
- * Deleta múltiplos registros do histórico
- * @param {Array<number>} ids - Array de IDs dos registros a serem deletados
- * @returns {Promise<number>} Número de registros deletados
- */
-function deleteMultipleHistoryItems(ids) {
-    return new Promise((resolve, reject) => {
-        if (!ids || ids.length === 0) {
-            resolve(0);
-            return;
-        }
-        
-        const placeholders = ids.map(() => '?').join(',');
-        const query = `DELETE FROM history WHERE id IN (${placeholders})`;
-        
-        db.run(query, ids, function(err) {
-            if (err) {
-                console.error("Erro ao deletar múltiplos registros:", err.message);
-                reject(err);
-            } else {
-                console.log(`${this.changes} registros deletados`);
-                resolve(this.changes);
-            }
-        });
-    });
-}
-
-/**
- * Limpa todo o histórico
- * @returns {Promise<number>} Número de registros deletados
- */
-function clearAllHistory() {
-    return new Promise((resolve, reject) => {
-        db.run("DELETE FROM history", function(err) {
-            if (err) {
-                console.error("Erro ao limpar histórico:", err.message);
-                reject(err);
-            } else {
-                console.log(`Todo o histórico foi limpo. ${this.changes} registros deletados`);
-                resolve(this.changes);
-            }
-        });
-    });
-}
-
-/**
- * Deleta registros mais antigos que uma data específica
- * @param {Date} date - Data limite (registros anteriores serão deletados)
- * @returns {Promise<number>} Número de registros deletados
- */
-function deleteHistoryOlderThan(date) {
-    return new Promise((resolve, reject) => {
-        const dateString = date.toISOString();
-        db.run("DELETE FROM history WHERE timestamp < ?", [dateString], function(err) {
-            if (err) {
-                console.error("Erro ao deletar registros antigos:", err.message);
-                reject(err);
-            } else {
-                console.log(`${this.changes} registros antigos deletados`);
-                resolve(this.changes);
-            }
-        });
-    });
-}
-
-// ATUALIZE AS EXPORTAÇÕES
+// Remover as funções setApiKey e getApiKey do final do arquivo
 module.exports = { 
     initDatabase, 
     addHistory, 
@@ -184,9 +33,7 @@ module.exports = {
     deleteHistoryItem,
     deleteMultipleHistoryItems,
     clearAllHistory,
-    deleteHistoryOlderThan,
-    setApiKey, // <-- add this
-    getApiKey  // <-- add this
+    deleteHistoryOlderThan
 };
 
 function setApiKey(provider, apiKey, model = null, fallbackModel = null) {
@@ -210,6 +57,159 @@ function getApiKey(provider) {
             (err, row) => {
                 if (err) reject(err);
                 else resolve(row);
+            }
+        );
+    });
+}
+
+/**
+ * Adiciona um novo registro ao histórico
+ * @param {string} questionText - O texto da pergunta
+ * @param {string} responseText - O texto da resposta
+ * @param {number} durationSeconds - A duração em segundos
+ * @param {string} mode - O modo utilizado (destaque, sugestao, etc)
+ * @returns {Promise} Uma promise que resolve quando o registro é adicionado
+ */
+function addHistory(questionText, responseText, durationSeconds, mode) {
+    return new Promise((resolve, reject) => {
+        db.run(
+            `INSERT INTO history (question_text, response_text, duration_seconds, mode) 
+             VALUES (?, ?, ?, ?)`,
+            [questionText, responseText, durationSeconds, mode],
+            function(err) {
+                if (err) reject(err);
+                else resolve(this.lastID);
+            }
+        );
+    });
+}
+
+/**
+ * Retorna todos os registros do histórico ordenados por data
+ * @returns {Promise<Array>} Uma promise que resolve com um array de registros
+ */
+function getAllHistory() {
+    return new Promise((resolve, reject) => {
+        db.all(
+            `SELECT * FROM history ORDER BY timestamp DESC`,
+            [],
+            (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows);
+            }
+        );
+    });
+}
+
+/**
+ * Retorna estatísticas de uso por modo
+ * @returns {Promise<Array>} Uma promise que resolve com um array de estatísticas por modo
+ */
+function getModeUsageStats() {
+    return new Promise((resolve, reject) => {
+        db.all(
+            `SELECT 
+                mode,
+                COUNT(*) as total_uses,
+                AVG(duration_seconds) as avg_duration,
+                MIN(timestamp) as first_use,
+                MAX(timestamp) as last_use
+            FROM history 
+            WHERE mode IS NOT NULL 
+            GROUP BY mode
+            ORDER BY total_uses DESC`,
+            [],
+            (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows);
+            }
+        );
+    });
+}
+
+/**
+ * Deleta um item específico do histórico
+ * @param {number} id - O ID do item a ser deletado
+ * @returns {Promise<boolean>} Uma promise que resolve com true se o item foi deletado com sucesso
+ */
+function deleteHistoryItem(id) {
+    return new Promise((resolve, reject) => {
+        db.run(
+            `DELETE FROM history WHERE id = ?`,
+            [id],
+            function(err) {
+                if (err) reject(err);
+                else resolve(this.changes > 0);
+            }
+        );
+    });
+}
+
+/**
+ * Deleta múltiplos itens do histórico
+ * @param {number[]} ids - Array com os IDs dos itens a serem deletados
+ * @returns {Promise<{success: boolean, deletedCount: number}>} Uma promise que resolve com o status da operação
+ */
+function deleteMultipleHistoryItems(ids) {
+    return new Promise((resolve, reject) => {
+        if (!Array.isArray(ids) || ids.length === 0) {
+            resolve({ success: false, deletedCount: 0 });
+            return;
+        }
+
+        const placeholders = ids.map(() => '?').join(',');
+        db.run(
+            `DELETE FROM history WHERE id IN (${placeholders})`,
+            ids,
+            function(err) {
+                if (err) reject(err);
+                else resolve({
+                    success: true,
+                    deletedCount: this.changes
+                });
+            }
+        );
+    });
+}
+
+/**
+ * Limpa todo o histórico
+ * @returns {Promise<boolean>} Uma promise que resolve com true se o histórico foi limpo com sucesso
+ */
+function clearAllHistory() {
+    return new Promise((resolve, reject) => {
+        db.run(
+            `DELETE FROM history`,
+            [],
+            function(err) {
+                if (err) reject(err);
+                else resolve(true);
+            }
+        );
+    });
+}
+
+/**
+ * Deleta registros do histórico mais antigos que a data especificada
+ * @param {Date} date - Data limite para manter os registros
+ * @returns {Promise<{success: boolean, deletedCount: number}>} Uma promise que resolve com o status da operação
+ */
+function deleteHistoryOlderThan(date) {
+    return new Promise((resolve, reject) => {
+        if (!(date instanceof Date) || isNaN(date)) {
+            resolve({ success: false, deletedCount: 0 });
+            return;
+        }
+
+        db.run(
+            `DELETE FROM history WHERE timestamp < datetime(?)`,
+            [date.toISOString()],
+            function(err) {
+                if (err) reject(err);
+                else resolve({
+                    success: true,
+                    deletedCount: this.changes
+                });
             }
         );
     });

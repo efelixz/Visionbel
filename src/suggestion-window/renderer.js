@@ -470,12 +470,11 @@ let currentMode = 'sugestao';
 
 // ÚNICO handler de recebimento de sugestões
 window.suggestionAPI.onReceiveSuggestions((event, { suggestions, mode }) => {
-    console.log('Recebendo sugestões:', suggestions, mode); // Debug
+    console.log('Recebendo sugestões:', suggestions, mode);
     
-    // Verificação adicional
     if (!suggestions || suggestions.trim() === '') {
         console.error('Sugestões vazias recebidas');
-        suggestionsContent.innerHTML = '<div class="error-message">Nenhuma resposta foi gerada pela IA.</div>';
+        suggestionsContent.innerHTML = '<div class="error-message">Nenhuma resposta foi gerada pela IA. Por favor, verifique suas configurações de API.</div>';
         return;
     }
     
@@ -725,6 +724,18 @@ function initializeContextDetection() {
         detectContextFromScreenshot(screenshot);
     });
 }
+
+// Adicionar após as declarações de variáveis no início do arquivo
+let dragEvent = null;
+
+// Adicionar os event listeners de drag and drop
+document.addEventListener('dragstart', (e) => {
+    dragEvent = e;
+});
+
+document.addEventListener('dragend', () => {
+    dragEvent = null;
+});
 
 // Análise de contexto da captura de tela
 async function detectContextFromScreenshot(screenshot) {

@@ -9,7 +9,7 @@ const automationService = require('../services/automation-service');
 const aiService = require('../services/multi-ai-service.js');
 // MODIFICADO: Importamos o serviço completo para usar ambas as funções
 const ocrService = require('../services/ocr-service');
-const { getAIResponse, getDefaultPrompts, needsMoreContext, analyzeWithContextCheck } = require('../services/ai-service');
+
 const { testApiKey } = require('../services/multi-ai-service');
 const dbService = require('../services/database-service');
 
@@ -469,7 +469,7 @@ async function executeFullCaptureFlow(mode) {
         // NOVO: Lógica específica para o modo Destaque
         if (mode === 'destaque') {
             const textToAnalyze = ocrData.fullText;
-            const aiResponse = await getAIResponse({ text: textToAnalyze, mode: 'destaque', signal: currentAnalysisController.signal });
+            const aiResponse = await aiService.getAIResponse({ text: textToAnalyze, mode: 'destaque', signal: currentAnalysisController.signal });
             
             // Fecha o popup de "Pensando..."
             if (thinkingWindow && !thinkingWindow.isDestroyed()) {
@@ -565,7 +565,7 @@ async function executeFullCaptureFlow(mode) {
         if (mode === 'shadow') {
             aiResponseText = '(Observado no Modo Shadow)';
         } else {
-            aiResponseText = await getAIResponse({ text, mode, signal: currentAnalysisController.signal });
+            aiResponseText = await aiService.getAIResponse({ text, mode, signal: currentAnalysisController.signal });
         }
         
         // Passo 4: Salvar no Banco de Dados
@@ -617,7 +617,7 @@ async function executeFullCaptureFlow(mode) {
             suggestionWindow.webContents.on('did-finish-load', () => {
                 const windowId = suggestionWindow.id;
                 
-                // NOVO: Salvar o texto original capturado
+                // Salvar o texto original capturado
                 originalCapturedTexts.set(windowId, text);
                 
                 // Inicializar o histórico da conversa
@@ -811,7 +811,7 @@ ipcMain.on('send-additional-context', async (event, additionalContext) => {
         }
         
         // Analisa com verificação de contexto
-        const analysis = await analyzeWithContextCheck({
+        const analysis = await aiService.analyzeWithContextCheck({
             text: contextForAI,
             mode: 'sugestao',
             conversationHistory: history,
@@ -1070,8 +1070,7 @@ ipcMain.handle('reset-custom-prompt', async (event, mode) => {
 });
 
 ipcMain.handle('get-default-prompts', () => {
-    const { getDefaultPrompts } = require('../services/ai-service');
-    return getDefaultPrompts();
+    return aiService.getDefaultPrompts();
 });
 
 // NOVO: Listener para mostrar/esconder o botão flutuante

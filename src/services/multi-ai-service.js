@@ -62,63 +62,86 @@ async function executeWithFallback(provider, operation, primaryModel, fallbackMo
     }
 }
 
-async function callGemini(prompt, models) {
-    const apiSettings = await settingsService.getSetting('apiSettings');
-    if (!apiSettings?.gemini?.key) {
-        throw new Error('Chave da API do Gemini não encontrada nas configurações.');
-    }
-    const genAI = new GoogleGenerativeAI(apiSettings.gemini.key);
-    const operation = async (modelName) => {
-        const model = genAI.getGenerativeModel({ model: modelName });
-        return await model.generateContent(prompt);
-    };
-    const result = await executeWithFallback('gemini', operation, models.primary, models.fallback);
-    const response = await result.response;
-    return response.text();
-}
-
-async function callOpenAI(prompt, models) {
-    throw new Error('OpenAI ainda não implementado');
-}
-
-async function callAnthropic(prompt, models) {
-    throw new Error('Anthropic ainda não implementado');
-}
-
-async function callCohere(prompt, models) {
-    throw new Error('Cohere ainda não implementado');
-}
-
-async function getAIResponse({ text, mode }) {
+async function getAIResponse({ text, mode, signal = null }) {
     try {
         const apiSettings = await settingsService.getSetting('apiSettings');
         const provider = apiSettings?.provider || 'gemini';
-        const customPrompts = await settingsService.getCustomPrompts();
+
+        // Carrega os prompts padrão do arquivo ai-service.js
         const defaultPrompts = require('./ai-service').getDefaultPrompts();
+        const customPrompts = await settingsService.getCustomPrompts();
+
         const promptTemplate = customPrompts[mode] || defaultPrompts[mode] || "Responda a seguinte questão:";
         const prompt = `${promptTemplate} \"${text}\"`;
+
         const providerSettings = apiSettings[provider];
+
+        // A verificação principal que estava causando o erro
         if (!providerSettings || !providerSettings.key) {
-            return `Erro: Provedor ${provider} não configurado. Por favor, configure a chave da API.`;
+            // Esta mensagem agora será mais precisa
+            return `Erro: Provedor ${provider} não configurado. Por favor, configure a chave da API nas Configurações.`;
         }
+
         const models = {
             primary: providerSettings.model,
             fallback: providerSettings.fallbackModel
         };
+
+        // Adiciona um AbortSignal para cancelar a requisição se necessário
+        const operationWithSignal = (modelName) => {
+            const operation = async (model) => {
+                if (signal && signal.aborted) {
+                    throw new Error('Operação cancelada pelo usuário');
+                }
+                const genAI = new GoogleGenerativeAI(providerSettings.key);
+                const geminiModel = genAI.getGenerativeModel({ model });
+                return await geminiModel.generateContent(prompt);
+            };
+
+            if (provider === 'gemini') {
+                return executeWithFallback('gemini', operation, modelName, models.fallback);
+            }
+            // Adicione aqui a lógica para outros provedores (OpenAI, etc.)
+            throw new Error(`Provedor ${provider} não suportado`);
+        };
+
         switch (provider) {
             case 'gemini':
-                return await callGemini(prompt, models);
+                console.log('Iniciando chamada Gemini com configurações:', {
+                    model: models.primary,
+                    fallback: models.fallback,
+                    prompt: prompt
+                });
+                const genAI = new GoogleGenerativeAI(providerSettings.key);
+                const operation = async (modelName) => {
+                    console.log('Tentando modelo:', modelName);
+                    const model = genAI.getGenerativeModel({ model: modelName });
+                    const result = await model.generateContent(prompt, { signal });
+                    console.log('Resposta recebida:', result);
+                    return result;
+                };
+                const result = await executeWithFallback('gemini', operation, models.primary, models.fallback);
+                const response = await result.response;
+                console.log('Resposta final:', response.text());
+                return response.text();
+
             case 'openai':
-                return await callOpenAI(prompt, models);
+                // Implementar chamada para OpenAI aqui
+                throw new Error('OpenAI ainda não implementado');
             case 'anthropic':
-                return await callAnthropic(prompt, models);
+                // Implementar chamada para Anthropic aqui
+                throw new Error('Anthropic ainda não implementado');
             case 'cohere':
-                return await callCohere(prompt, models);
+                // Implementar chamada para Cohere aqui
+                throw new Error('Cohere ainda não implementado');
             default:
                 throw new Error(`Provedor ${provider} não suportado`);
         }
     } catch (error) {
         console.error(`Erro em getAIResponse:`, error);
+        if (error.message.includes('cancelada')) {
+            return 'Análise cancelada.';
+        }
         return `Ocorreu um erro ao conectar com a IA. Detalhes: ${error.message}`;
     }
 }
