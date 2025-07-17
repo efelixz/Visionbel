@@ -993,3 +993,32 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeEnhancedFeatures();
     setupAutoClose();
 });
+
+// Função para auto-redimensionar o textarea
+function autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto'; // Reseta a altura
+    textarea.style.height = textarea.scrollHeight + 'px'; // Define a nova altura
+}
+
+// Adiciona os event listeners para o textarea
+if (contextInput) {
+    // Auto-redimensiona ao digitar
+    contextInput.addEventListener('input', () => {
+        autoResizeTextarea(contextInput);
+    });
+    
+    // Auto-redimensiona ao carregar
+    autoResizeTextarea(contextInput);
+    
+    // Auto-redimensiona ao colar texto
+    contextInput.addEventListener('paste', () => {
+        setTimeout(() => autoResizeTextarea(contextInput), 0);
+    });
+}
+
+// Adiciona listener para redimensionamento da janela
+window.addEventListener('resize', () => {
+    if (contextInput) {
+        autoResizeTextarea(contextInput);
+    }
+});

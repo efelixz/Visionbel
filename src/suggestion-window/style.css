@@ -452,28 +452,36 @@ footer {
     }
     
     @media (max-width: 768px) {
-        #container {
-            border-radius: 12px;
-            min-width: 500px;
-        }
-        
-        #chat-area {
-            width: 280px;
-        }
-        
-        #suggestions-content {
-            font-size: 13px;
-            padding: 12px;
-        }
-        
-        header {
-            padding: 12px 16px;
-        }
-        
-        header h1 {
-            font-size: 16px;
-        }
+    #chat-area {
+        width: 100%;
+        max-width: none;
+        border-left: none;
+        border-top: 1px solid rgba(75, 85, 99, 0.4);
     }
+    
+    #container {
+        flex-direction: column;
+        border-radius: 12px;
+        min-width: 500px;
+    }
+    
+    .content-area {
+        flex-direction: column;
+    }
+    
+    #suggestions-content {
+        font-size: 13px;
+        padding: 12px;
+    }
+    
+    header {
+        padding: 12px 16px;
+    }
+    
+    header h1 {
+        font-size: 16px;
+    }
+}
     
     @media (max-width: 640px) {
         #container {
@@ -598,23 +606,28 @@ footer {
 
     /* Área de chat melhorada */
     #chat-area {
-        width: 400px;
-        border-left: 1px solid rgba(75, 85, 99, 0.3);
-        background: rgba(17, 24, 39, 0.95);
-    }
+    width: 35%;
+    min-width: 300px;
+    max-width: 450px;
+    transition: width 0.3s ease;
+    border-left: 1px solid rgba(75, 85, 99, 0.3);
+    background: rgba(17, 24, 39, 0.95);
+}
 
     #context-input {
-        width: 100%;
-        min-height: 60px;
-        padding: 12px;
-        background: rgba(31, 41, 55, 0.8);
-        border: 1px solid rgba(75, 85, 99, 0.4);
-        border-radius: 12px;
-        color: #e5e7eb;
-        font-size: 14px;
-        resize: none;
-        transition: all 0.3s ease;
-    }
+    width: 100%;
+    min-height: 60px;
+    max-height: 150px;
+    resize: none;
+    overflow-y: hidden;
+    padding: 12px;
+    background: rgba(31, 41, 55, 0.5);
+    border: 1px solid rgba(75, 85, 99, 0.4);
+    border-radius: 8px;
+    color: #e5e7eb;
+    line-height: 1.5;
+    transition: all 0.2s ease;
+}
 
     #context-input:focus {
         outline: none;
@@ -829,10 +842,10 @@ footer {
 }
 
 #context-input:focus,
-#interaction-input:focus {
+#context-input:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #6366f1;
+    background: rgba(31, 41, 55, 0.7);
 }
 
 #context-input::placeholder,

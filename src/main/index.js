@@ -878,16 +878,34 @@ ipcMain.on('send-additional-context', async (event, additionalContext) => {
     }
 });
 
-ipcMain.on('request-new-capture', () => {
-    // Fecha a janela atual de sugestões
-    const windows = BrowserWindow.getAllWindows();
-    const suggestionWindow = windows.find(w => w.webContents.getURL().includes('suggestion-window'));
-    if (suggestionWindow) {
-        suggestionWindow.close();
+ipcMain.on('request-new-capture', async (event) => {
+    try {
+        // Obtém a janela atual
+        const currentWindow = BrowserWindow.fromWebContents(event.sender);
+        const windowId = currentWindow.id;
+        
+        // Inicia nova captura
+        const { result } = await executeFullCaptureFlow('sugestao');
+        
+        if (result && currentWindow && !currentWindow.isDestroyed()) {
+            // Envia a resposta para o chat atual
+            currentWindow.webContents.send('chat-response', {
+                message: result,
+                isUser: false,
+                needsMoreContext: false,
+                isComplete: true
+            });
+            
+            // Atualiza o histórico da conversa
+            if (!conversationHistories.has(windowId)) {
+                conversationHistories.set(windowId, []);
+            }
+            const history = conversationHistories.get(windowId);
+            history.push(result);
+        }
+    } catch (error) {
+        console.error('Erro ao processar nova captura:', error);
     }
-    
-    // Inicia nova captura
-    executeFullCaptureFlow('sugestao').catch(console.error);
 });
 
 app.whenReady().then(() => {
