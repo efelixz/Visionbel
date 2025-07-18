@@ -1,14 +1,37 @@
 window.PROVIDERS_DATA = {
-  gemini: {
-    name: "Gemini",
-    models: {
-      "gemini-2.5-pro": "🌟 Gemini 2.5 Pro (Mais Avançado)",
-      "gemini-2.5-flash": "⚡ Gemini 2.5 Flash (Ultra Rápido)",
-      "gemini-2.0-flash-exp": "🚀 Gemini 2.0 Flash (Experimental)",
-      "gemini-1.5-flash-latest": "⚡ Gemini 1.5 Flash (Estável)",
-      "gemini-1.5-pro-latest": "💎 Gemini 1.5 Pro (Avançado)"
+    gemini: {
+        name: "Google Gemini",
+        models: {
+            "gemini-2.5-pro": "🌟 Gemini 2.5 Pro (Mais Avançado)",
+            "gemini-2.5-flash": "⚡ Gemini 2.5 Flash (Ultra Rápido)",
+            "gemini-2.0-flash-exp": "🚀 Gemini 2.0 Flash (Experimental)",
+            "gemini-1.5-flash-latest": "⚡ Gemini 1.5 Flash (Estável)",
+            "gemini-1.5-pro-latest": "💎 Gemini 1.5 Pro (Avançado)"
+        }
+    },
+    openai: {
+        name: "OpenAI",
+        models: {
+            "gpt-4-turbo": "🌟 GPT-4 Turbo",
+            "gpt-4": "💎 GPT-4",
+            "gpt-3.5-turbo": "⚡ GPT-3.5 Turbo"
+        }
+    },
+    anthropic: {
+        name: "Anthropic Claude",
+        models: {
+            "claude-3-opus": "🌟 Claude 3 Opus",
+            "claude-3-sonnet": "💎 Claude 3 Sonnet",
+            "claude-3-haiku": "⚡ Claude 3 Haiku"
+        }
+    },
+    cohere: {
+        name: "Cohere",
+        models: {
+            "command-r": "⚡ Command-R",
+            "command": "💎 Command"
+        }
     }
-  }
 };
 
 // Elementos da UI
@@ -37,23 +60,20 @@ function updateModelSelect(provider) {
 // Função que inicializa toda a tela
 async function initializeSettingsPage() {
     try {
-        // Removido: PROVIDERS_DATA = await window.settingsAPI.getAvailableProviders();
-        // 2. Preenche o seletor de provedores dinamicamente
+        // Preenche o seletor de provedores
         providerSelect.innerHTML = '';
-        Object.keys(PROVIDERS_DATA).forEach(providerKey => {
+        Object.entries(PROVIDERS_DATA).forEach(([key, data]) => {
             const option = document.createElement('option');
-            option.value = providerKey;
-            option.textContent = PROVIDERS_DATA[providerKey].name;
+            option.value = key;
+            option.textContent = data.name;
             providerSelect.appendChild(option);
         });
 
-        // 3. Carrega as configurações salvas do usuário
+        // Carrega as configurações salvas
         const settings = await window.settingsAPI.getSetting('apiSettings');
-        if (settings && settings.provider) {
-            providerSelect.value = settings.provider;
-            
-            // Atualiza a lista de modelos para o provedor salvo
-            updateModelSelect(settings.provider);
+        if (settings) {
+            providerSelect.value = settings.provider || 'gemini';
+            updateModelSelect(providerSelect.value);
             
             const providerSettings = settings[settings.provider];
             if (providerSettings) {
@@ -61,7 +81,6 @@ async function initializeSettingsPage() {
                 modelSelect.value = providerSettings.model || '';
             }
         } else {
-            // Se não houver nada salvo, apenas inicializa com o primeiro provedor
             updateModelSelect(providerSelect.value);
         }
     } catch (error) {
@@ -82,20 +101,20 @@ async function testConnection() {
     const apiKey = apiKeyInput.value.trim();
     const model = modelSelect.value;
 
-    if (!apiKey || !model) {
-        showStatus('Erro: Chave de API e Modelo são obrigatórios.', 'error');
+    if (!apiKey) {
+        showStatus('Por favor, insira uma chave de API', 'error');
         return;
     }
 
     testButton.disabled = true;
     testButton.classList.add('testing');
-    showStatus(`Testando ${provider.toUpperCase()} com o modelo ${model}...`, 'warning');
+    showStatus('Testando conexão...', 'warning');
 
     try {
         const result = await window.settingsAPI.testApiKey(provider, apiKey, model);
         
         if (result.success) {
-            showStatus(result.message || 'Conexão estabelecida com sucesso!', 'success');
+            showStatus('Conexão estabelecida com sucesso!', 'success');
         } else {
             showStatus(`Erro: ${result.message || 'Falha no teste de conexão'}`, 'error');
         }
@@ -118,12 +137,6 @@ async function saveSettings() {
         return;
     }
 
-    // Defensive check for PROVIDERS_DATA
-    if (!PROVIDERS_DATA[provider] || !PROVIDERS_DATA[provider].models) {
-        showStatus('Erro interno: dados do provedor não carregados.', 'error');
-        return;
-    }
-
     try {
         const currentSettings = await window.settingsAPI.getSetting('apiSettings') || {};
         const updatedSettings = {
@@ -131,8 +144,7 @@ async function saveSettings() {
             provider: provider,
             [provider]: {
                 key: apiKey,
-                model: model,
-                fallbackModel: Object.keys(PROVIDERS_DATA[provider].models)[1] || model
+                model: model
             }
         };
         await window.settingsAPI.setSetting('apiSettings', updatedSettings);
@@ -145,7 +157,7 @@ async function saveSettings() {
 // Exibir mensagens de status
 function showStatus(message, type) {
     statusMessage.textContent = message;
-    statusMessage.className = `mt-4 p-4 rounded status-${type}`;
+    statusMessage.className = `mt-6 p-4 rounded-lg status-${type}`;
     statusMessage.classList.remove('hidden');
 }
 
@@ -156,13 +168,4 @@ saveButton.addEventListener('click', saveSettings);
 
 // Inicia todo o processo
 initializeSettingsPage();
-const { setApiKey } = require('../services/database-service');
 
-async function salvarConfiguracao() {
-    const provider = document.getElementById('provider').value;
-    const apiKey = document.getElementById('apiKey').value;
-    const model = document.getElementById('model').value;
-    const fallbackModel = document.getElementById('fallbackModel').value;
-    await setApiKey(provider, apiKey, model, fallbackModel);
-    alert('Configuração salva no banco de dados!');
-}

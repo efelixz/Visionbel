@@ -1,4 +1,4 @@
-# 🤝 Contribuindo para o SkillVision™
+# 🤝 Contribuindo para o VisionBel™™
 
 Obrigado por considerar contribuir para o SkillVision! Este guia ajudará você a entender como contribuir efetivamente.
 

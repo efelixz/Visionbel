@@ -199,7 +199,7 @@ function resetInactivityTimer() {
     }
     inactivityTimeout = setTimeout(() => {
         if (!isPinned) {
-            window.suggestionAPI.closeWindow();
+            window.suggestionAPI.minimizeWindow();
         }
     }, INACTIVITY_TIMEOUT);
 }
@@ -210,18 +210,12 @@ function setupAutoClose() {
 }
 
 // Event listeners para os botões de controle
-document.getElementById('minimizeBtn').addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('Botão minimizar clicado'); // Debug
+document.getElementById('minimizeBtn').addEventListener('click', () => {
     window.suggestionAPI.minimizeWindow();
 });
 
-document.getElementById('closeBtn').addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('Botão fechar clicado'); // Debug
-    window.suggestionAPI.closeWindow();
+document.getElementById('closeBtn').addEventListener('click', () => {
+    window.suggestionAPI.minimizeWindow();
 });
 
 // Event listener para envio de contexto principal
@@ -929,12 +923,12 @@ Mantenha o mesmo tópico, mas ajuste a complexidade e abordagem conforme o novo 
 
 // Salvar preferências do usuário
 function saveUserPreference(key, value) {
-    localStorage.setItem(`skillvision_${key}`, value);
+    localStorage.setItem(`visionbel_${key}`, value);
 }
 
 // Carregar preferências do usuário
 function loadUserPreferences() {
-    const savedLevel = localStorage.getItem('skillvision_depthLevel');
+    const savedLevel = localStorage.getItem('visionbel_depthLevel');
     if (savedLevel) {
         currentDepthLevel = savedLevel;
         document.getElementById('depth-level').value = savedLevel;
@@ -945,12 +939,12 @@ function loadUserPreferences() {
 
 // Salvar métricas de progresso
 function saveProgressMetrics() {
-    localStorage.setItem('skillvision_progress', JSON.stringify(progressMetrics));
+    localStorage.setItem('visionbel_progress', JSON.stringify(progressMetrics));
 }
 
 // Carregar métricas de progresso
 function loadProgressMetrics() {
-    const saved = localStorage.getItem('skillvision_progress');
+    const saved = localStorage.getItem('visionbel_progress');
     if (saved) {
         progressMetrics = { ...progressMetrics, ...JSON.parse(saved) };
         updateProgressDisplay();
@@ -994,6 +988,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAutoClose();
 });
 
+let resizeTimeout;
+
 // Função para auto-redimensionar o textarea
 function autoResizeTextarea(textarea) {
     textarea.style.height = 'auto'; // Reseta a altura
@@ -1018,7 +1014,24 @@ if (contextInput) {
 
 // Adiciona listener para redimensionamento da janela
 window.addEventListener('resize', () => {
-    if (contextInput) {
-        autoResizeTextarea(contextInput);
-    }
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        adjustLayout();
+        if (contextInput) {
+            autoResizeTextarea(contextInput);
+        }
+    }, 250);
 });
+
+function adjustLayout() {
+    const container = document.getElementById('container');
+    const isMobile = window.innerWidth <= 640;
+    
+    if (isMobile) {
+        container.style.margin = '0';
+        container.style.borderRadius = '0';
+    } else {
+        container.style.margin = 'auto';
+        container.style.borderRadius = '16px';
+    }
+}

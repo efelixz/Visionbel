@@ -2,63 +2,79 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configurações - SkillVision</title>
-    <link rel="stylesheet" href="../styles/tailwind.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Configurações - Visionbel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/output.css">
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-cyber-dark text-white p-6">
-    <div class="max-w-2xl mx-auto">
-        <h1 class="text-2xl font-bold mb-6 text-neon-blue">Configurações da API</h1>
-        
-        <!-- Seleção de Provedor -->
-        <div class="mb-6">
-            <label class="block text-sm font-medium mb-2">Provedor de IA</label>
-            <select id="provider-select" class="w-full bg-cyber-light border border-neon-blue rounded p-2">
-                <option value="gemini">Google Gemini</option>
-                <option value="openai">OpenAI</option>
-                <option value="anthropic">Anthropic Claude</option>
-                <option value="cohere">Cohere</option>
-            </select>
-        </div>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans antialiased transition-colors duration-300">
+    <div class="container mx-auto min-h-screen p-2 sm:p-4 lg:p-6">
+        <!-- Header Clean -->
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-2 sm:gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-semibold text-sm sm:text-lg">SV</span>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Configurações</h1>
+                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Ajuste os parâmetros da IA</p>
+                </div>
+            </div>
+        </header>
 
-        <!-- Configuração da Chave API -->
-        <div class="mb-6">
-            <label class="block text-sm font-medium mb-2">Chave da API</label>
-            <div class="flex gap-2">
-                <input type="password" id="api-key-input" 
-                       class="flex-1 bg-cyber-light border border-neon-blue rounded p-2" 
-                       placeholder="Digite sua chave da API">
-                <button id="toggle-key" 
-                        class="px-3 py-2 bg-cyber-light border border-neon-purple rounded hover:bg-neon-purple/20">
-                    👁️
+        <!-- Main Content Clean -->
+        <main class="bg-white dark:bg-gray-800 p-3 sm:p-4 lg:p-6 rounded-xl border border-gray-200 dark:border-gray-700 flex-1 transition-colors duration-300 shadow-sm flex flex-col gap-4">
+            <!-- Seleção de Provedor -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Provedor de IA</label>
+                <select id="provider-select" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5 text-sm">
+                </select>
+            </div>
+
+            <!-- Configuração da Chave API -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Chave da API</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="password" id="api-key-input" class="flex-1 min-w-0 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5 text-sm" placeholder="Digite sua chave da API">
+                    <button id="toggle-key" class="sm:w-auto px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-lg border border-gray-300 dark:border-gray-600 text-sm flex-shrink-0">👁️</button>
+                </div>
+            </div>
+
+            <!-- Seleção de Modelo -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Modelo</label>
+                <select id="model-select" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5 text-sm">
+                </select>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="flex flex-col sm:flex-row gap-3 mt-4">
+                <button id="test-button" class="w-full sm:flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg text-sm transition-colors duration-200">
+                    Testar Conexão
+                </button>
+                <button id="save-button" class="w-full sm:flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium rounded-lg text-sm transition-colors duration-200">
+                    Salvar Configurações
                 </button>
             </div>
-        </div>
 
-        <!-- Seleção de Modelo -->
-        <div class="mb-6">
-            <label class="block text-sm font-medium mb-2">Modelo</label>
-            <select id="model-select" class="w-full bg-cyber-light border border-neon-blue rounded p-2"></select>
-        </div>
-
-        <!-- Botões de Ação -->
-        <div class="flex gap-4">
-            <button id="test-button" 
-                    class="flex-1 px-4 py-2 bg-neon-blue/20 border border-neon-blue rounded hover:bg-neon-blue/30">
-                Testar Conexão
-            </button>
-            <button id="save-button" 
-                    class="flex-1 px-4 py-2 bg-neon-green/20 border border-neon-green rounded hover:bg-neon-green/30">
-                Salvar Configurações
-            </button>
-        </div>
-
-        <!-- Status/Feedback -->
-        <div id="status-message" class="mt-4 p-4 rounded hidden">
-            <!-- Preenchido via JavaScript -->
-        </div>
+            <!-- Status/Feedback -->
+            <div id="status-message" class="hidden mt-4 p-4 rounded-lg text-sm"></div>
+        </main>
     </div>
+
     <script src="renderer.js"></script>
+    <script>
+        // Theme Toggle Functionality
+        const html = document.documentElement;
+        
+        // Check for saved theme preference or default to DARK mode
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'dark') {
+            html.classList.add('dark');
+        } else {
+            html.classList.remove('dark');
+        }
+    </script>
 </body>
 </html>

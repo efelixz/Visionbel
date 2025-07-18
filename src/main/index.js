@@ -74,7 +74,7 @@ async function executeQuickCapture() {
         
         // Mostra notificação de início
         new Notification({
-            title: 'SkillVision™',
+            title: 'Visionbel™',
             body: 'Iniciando captura rápida...',
             silent: true
         }).show();
@@ -84,7 +84,7 @@ async function executeQuickCapture() {
         // Mostra notificação de conclusão
         if (result && result !== 'Captura cancelada.' && result !== 'Nenhum texto encontrado.') {
             new Notification({
-                title: 'SkillVision™',
+                title: 'VisionBel™',
                 body: 'Captura processada com sucesso!',
                 silent: true
             }).show();
@@ -92,7 +92,7 @@ async function executeQuickCapture() {
     } catch (error) {
         console.error('Erro na captura rápida:', error);
         new Notification({
-            title: 'SkillVision™ - Erro',
+            title: 'Visionbel™ - Erro',
             body: 'Falha na captura rápida',
             silent: true
         }).show();
@@ -105,7 +105,7 @@ function updateTrayMenu() {
     
     const contextMenu = Menu.buildFromTemplate([
         {
-            label: 'SkillVision™',
+            label: 'Visionbel™',
             enabled: false
         },
         {
@@ -137,7 +137,7 @@ function updateTrayMenu() {
                 
                 // Notificação de estado
                 new Notification({
-                    title: 'SkillVision™',
+                    title: 'VisionBel™',
                     body: quickCaptureEnabled ? 
                         'Captura rápida ATIVADA - Clique no ícone da bandeja para capturar' : 
                         'Captura rápida DESATIVADA',
@@ -181,12 +181,15 @@ function updateTrayMenu() {
             click: () => {
                 const settingsWindow = new BrowserWindow({
                     width: 500,
-                    height: 400,
+                    height: 600,
+                    minWidth: 320,
+                    minHeight: 500,
                     title: 'Configurações',
                     webPreferences: {
                         preload: path.join(__dirname, '../settings-window/preload.js'),
                         contextIsolation: true
-                    }
+                    },
+                    resizable: true
                 });
                 settingsWindow.loadFile('src/settings-window/index.html');
             }
@@ -210,8 +213,8 @@ function updateTrayTooltip() {
     if (!tray) return;
     
     const tooltip = quickCaptureEnabled ? 
-        'SkillVision™ - Captura Rápida ATIVADA (Clique para capturar)' :
-        'SkillVision™ - Captura Rápida DESATIVADA';
+        'Visionbel™ - Captura Rápida ATIVADA (Clique para capturar)' :
+        'Visionbel™ - Captura Rápida DESATIVADA';
     
     tray.setToolTip(tooltip);
 }
@@ -236,7 +239,7 @@ function createMainWindow() {
       // Mostra notificação apenas na primeira vez
       if (!mainWindow.wasMinimizedToTray) {
         new Notification({
-          title: 'SkillVision™',
+          title: 'VisionBel™',
           body: 'Aplicativo minimizado para a bandeja do sistema',
           silent: true
         }).show();
@@ -252,7 +255,7 @@ function createMainWindow() {
       mainWindow.hide();
       
       new Notification({
-        title: 'SkillVision™',
+        title: 'VisionBel™',
         body: 'Aplicativo continua rodando na bandeja do sistema',
         silent: true
       }).show();
@@ -558,13 +561,13 @@ async function executeFullCaptureFlow(mode) {
                     .join('\n');
 
                 new Notification({
-                    title: 'SkillVision™ - Elementos Encontrados',
+                    title: 'Visionbel™ - Elementos Encontrados',
                     body: countText,
                     silent: true
                 }).show();
             } else {
                 new Notification({
-                    title: 'SkillVision™ - Destaque',
+                    title: 'Visionbel™ - Destaque',
                     body: 'Nenhum elemento relevante encontrado para destacar',
                     silent: true
                 }).show();
@@ -626,6 +629,14 @@ async function executeFullCaptureFlow(mode) {
                 webPreferences: {
                     preload: path.join(__dirname, '../suggestion-window/preload.js'),
                     contextIsolation: true
+                }
+            });
+
+            // Prevenir o fechamento e minimizar
+            suggestionWindow.on('close', (event) => {
+                if (!app.isQuiting) {
+                    event.preventDefault();
+                    suggestionWindow.minimize();
                 }
             });
 
@@ -763,7 +774,7 @@ async function executeFullCaptureFlow(mode) {
             }
             
             new Notification({
-                title: 'SkillVision™ - Modo Shadow',
+                title: 'Visionbel™ - Modo Shadow',
                 body: 'Texto observado e salvo no histórico silenciosamente',
                 silent: true
             }).show();
@@ -920,7 +931,7 @@ globalShortcut.register('CommandOrControl+Shift+X', async () => {
     
     if (finalResponse && finalResponse !== '(Observado no Modo Shadow)' && finalResponse !== 'Captura cancelada.' && finalResponse !== 'Nenhum texto encontrado.') {
         const notification = new Notification({
-            title: `SkillVision™ ${selectedMode.charAt(0).toUpperCase() + selectedMode.slice(1)}`,
+            title: `Visionbel™ ${selectedMode.charAt(0).toUpperCase() + selectedMode.slice(1)}`,
             body: 'Análise concluída!',
             silent: true
         });
@@ -1017,7 +1028,7 @@ ipcMain.on('apply-fix', async (event, codeToType) => {
         console.log("Correção aplicada com sucesso!");
         
         new Notification({
-            title: 'SkillVision™',
+            title: 'VisionBel™',
             body: 'O código foi corrigido e aplicado com sucesso!'
         }).show();
         
@@ -1033,14 +1044,14 @@ ipcMain.on('apply-fix', async (event, codeToType) => {
             await ks.sendCombination(['control', 'v']);
             
             new Notification({
-                title: 'SkillVision™',
+                title: 'VisionBel™',
                 body: 'Código copiado e colado com sucesso!'
             }).show();
             
         } catch (fallbackError) {
             console.log('Código para aplicar manualmente:', codeToType);
             new Notification({
-                title: 'SkillVision™ - Manual',
+                title: 'Visionbel™ - Manual',
                 body: 'Verifique o console para o código corrigido.'
             }).show();
         }
@@ -1051,9 +1062,7 @@ ipcMain.on('apply-fix', async (event, codeToType) => {
 ipcMain.on('minimize-suggestion-window', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (win && !win.isDestroyed()) {
-        console.log('Minimizando janela de sugestões'); // Debug
         win.minimize();
-        // NÃO fechar a janela, apenas minimizar
     }
 });
 

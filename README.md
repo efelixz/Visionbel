@@ -1,4 +1,4 @@
-# 🎯 SkillVision™ - Assistente de IA para Estudos
+# 🎯 Visionbel™ - Assistente de IA para Estudos
 
 <div align="center">
   <img src="https://img.shields.io/badge/Electron-28.0.0-blue?style=for-the-badge&logo=electron" alt="Electron">
@@ -9,7 +9,7 @@
 
 ## 📋 Descrição
 
-SkillVision™ é um assistente inteligente de IA desenvolvido para estudantes e profissionais que precisam de análise rápida e precisa de conteúdo visual. O aplicativo utiliza OCR (Reconhecimento Óptico de Caracteres) e IA generativa para interpretar textos, imagens, códigos e questões de múltipla escolha.
+Visionbel™ é um assistente inteligente de IA desenvolvido para estudantes e profissionais que precisam de análise rápida e precisa de conteúdo visual. O aplicativo utiliza OCR (Reconhecimento Óptico de Caracteres) e IA generativa para interpretar textos, imagens, códigos e questões de múltipla escolha.
 
 ## ✨ Funcionalidades Principais
 

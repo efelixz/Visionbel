@@ -3,7 +3,7 @@ const path = require('path');
 const { app } = require('electron');
 
 // Define o caminho do banco de dados dentro da pasta de dados do usuário
-const dbPath = path.join(app.getPath('userData'), 'skillvision.db');
+const dbPath = path.join(app.getPath('userData'), 'visionbel.db');
 const db = new sqlite3.Database(dbPath);
 
 /**
