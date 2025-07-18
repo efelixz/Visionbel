@@ -115,49 +115,179 @@ async function getAIResponse({ text, mode, signal = null }) {
                 const genAI = new GoogleGenerativeAI(providerSettings.key);
                 const operation = async (modelName) => {
                     console.log('Tentando modelo:', modelName);
-                    const model = genAI.getGenerativeModel({ model: modelName });
-                    const result = await model.generateContent(prompt, { signal });
+                    const model = genAI.getGenerativeModel({ 
+                        model: modelName,
+                        generationConfig: {
+                            temperature: 0.7,
+                            topK: 40,
+                            topP: 0.95,
+                            maxOutputTokens: 2048
+                        }
+                    });
+
+                    let formattedPrompt;
+                    if (mode === 'sugestoes') {
+                        formattedPrompt = `${prompt}\n\nIMPORTANTE: Atue como um mentor especializado que guia através de perguntas e dicas, adaptando-se a diferentes áreas de conhecimento.\n\n` +
+                        `ÁREAS DE CONHECIMENTO:\n` +
+                        `1. 📚 Conteúdo Educacional:\n` +
+                        `   - Matemática: teoremas, demonstrações, fórmulas\n` +
+                        `   - Física: leis, princípios, experimentos\n` +
+                        `   - Química: reações, compostos, equações\n` +
+                        `   - Biologia: sistemas, processos, estruturas\n` +
+                        `   - História: eventos, períodos, contextos\n` +
+                        `   - Geografia: fenômenos, territórios, processos\n` +
+                        `   - Literatura: análises, interpretações, contextos\n` +
+                        `   - Línguas: gramática, sintaxe, semântica\n\n` +
+                        `2. 📝 Provas e Exercícios:\n` +
+                        `   - Questões dissertativas\n` +
+                        `   - Problemas matemáticos\n` +
+                        `   - Interpretação de texto\n` +
+                        `   - Análise de dados\n` +
+                        `   - Estudos de caso\n\n` +
+                        `3. 💻 Programação e Tecnologia:\n` +
+                        `   - Análise de código\n` +
+                        `   - Algoritmos e estruturas de dados\n` +
+                        `   - Padrões de projeto\n` +
+                        `   - Debugging e otimização\n` +
+                        `   - Arquitetura de software\n\n` +
+                        `4. 📊 Análise e Pesquisa:\n` +
+                        `   - Metodologia científica\n` +
+                        `   - Análise estatística\n` +
+                        `   - Revisão bibliográfica\n` +
+                        `   - Coleta de dados\n` +
+                        `   - Interpretação de resultados\n\n` +
+                        `5. 🌐 Interface do GitHub:\n` +
+                        `   - Estrutura do repositório\n` +
+                        `   - Histórico de commits\n` +
+                        `   - Informações de arquivos\n` +
+                        `   - Metadados do projeto\n` +
+                        `   - Colaboradores e contribuições\n\n` +
+                        `6. 📰 Notícias e Informações:\n` +
+                        `   - Manchetes e destaques\n` +
+                        `   - Análise de contexto\n` +
+                        `   - Fontes e credibilidade\n` +
+                        `   - Impacto e relevância\n` +
+                        `   - Tendências e padrões\n\n` +
+                        `7. 🌡️ Previsão do Tempo:\n` +
+                        `   - Condições climáticas\n` +
+                        `   - Alertas meteorológicos\n` +
+                        `   - Temperaturas e variações\n` +
+                        `   - Impactos locais\n` +
+                        `   - Recomendações\n\n` +
+                        `FUNÇÕES PRINCIPAIS:\n` +
+                        `1. 🧠 Perguntas Reflexivas:\n` +
+                        `   - Faça perguntas específicas da área\n` +
+                        `   - Estimule o pensamento crítico\n` +
+                        `   - Guie a construção do conhecimento\n\n` +
+                        `2. 🧩 Pistas Técnicas:\n` +
+                        `   - Forneça dicas contextualizadas\n` +
+                        `   - Sugira métodos e ferramentas\n` +
+                        `   - Indique recursos relevantes\n\n` +
+                        `3. 🔁 Sugestão por Etapas:\n` +
+                        `   - Divida problemas complexos\n` +
+                        `   - Estabeleça sequência lógica\n` +
+                        `   - Monitore o progresso\n\n` +
+                        `4. ⚙️ Adaptação ao Nível:\n` +
+                        `   - Identifique conhecimento prévio\n` +
+                        `   - Ajuste complexidade das dicas\n` +
+                        `   - Forneça suporte personalizado\n\n` +
+                        `5. 🧭 Caminho Sugerido:\n` +
+                        `   - Proponha estratégias específicas\n` +
+                        `   - Indique conexões importantes\n` +
+                        `   - Destaque conceitos fundamentais\n\n` +
+                        `6. ❌ Evite Respostas Diretas:\n` +
+                        `   - Mantenha o foco na aprendizagem\n` +
+                        `   - Estimule descobertas próprias\n` +
+                        `   - Valorize o processo\n\n` +
+                        `Sua resposta deve ser um objeto JSON válido com a seguinte estrutura:\n{\n` +
+                        `  "domain": "", // 📚 Área de conhecimento identificada\n` +
+                        `  "content_type": "", // 📝 Tipo de conteúdo (prova, código, etc)\n` +
+                        `  "difficulty_level": "", // ⚙️ Nível de dificuldade detectado\n` +
+                        `  "prerequisites": [], // 📋 Conhecimentos prévios necessários\n` +
+                        `  "key_concepts": [], // 🔑 Conceitos fundamentais\n` +
+                        `  "reflexive_questions": [], // 🧠 Perguntas para reflexão\n` +
+                        `  "technical_hints": [], // 🧩 Dicas técnicas contextualizadas\n` +
+                        `  "step_suggestions": [], // 🔁 Sugestões de passos\n` +
+                        `  "learning_resources": [], // 📚 Recursos de aprendizagem\n` +
+                        `  "suggested_path": [], // 🧭 Caminho de raciocínio\n` +
+                        `  "progress_markers": [], // 📍 Marcos de progresso\n` +
+                        `  "common_mistakes": [], // ⚠️ Erros comuns a evitar\n` +
+                        `  "validation_points": [], // ✅ Pontos de verificação\n` +
+                        `  "encouragement": [] // 🌟 Mensagens motivacionais\n` +
+                        `}`;
+                    } else {
+                        formattedPrompt = prompt;
+                    }
+
+                    const result = await model.generateContent(formattedPrompt, { signal });
                     console.log('Resposta recebida:', result);
                     return result;
                 };
+                
                 const result = await executeWithFallback('gemini', operation, models.primary, models.fallback);
                 const response = await result.response;
                 const text = response.text();
 
-                // Verificar o modo e processar adequadamente
+                // Processamento da resposta
                 if (mode === 'directo') {
-                    // Para resposta direta, retornar o texto puro
                     return text;
-                } else {
-                    // Para outros modos, manter o processamento JSON
+                } else if (mode === 'sugestoes') {
                     try {
-                        const cleanText = text.replace(/```json\s*|```\s*|`/g, '').trim();
-                        JSON.parse(cleanText);
-                        return cleanText;
+                        const parsedJson = JSON.parse(text);
+                        return JSON.stringify(parsedJson);
                     } catch (error) {
-                        console.error('Erro ao processar JSON:', error);
+                        console.error('Erro ao processar JSON do modo sugestões:', error);
+                        console.error('Texto recebido:', text);
+                        
                         return JSON.stringify({
-                            links: [],
-                            keywords: [],
-                            important_text: [`Erro ao processar resposta: ${error.message}`]
+                            domain: "error",
+                            content_type: "error_report",
+                            difficulty_level: "n/a",
+                            prerequisites: [],
+                            key_concepts: [],
+                            reflexive_questions: [
+                                "🤔 O conteúdo fornecido está no formato esperado?",
+                                "📝 As instruções foram seguidas corretamente?",
+                                "🔄 Vale a pena tentar novamente com uma entrada diferente?"
+                            ],
+                            technical_hints: [
+                                "📋 Verifique se o texto de entrada é válido",
+                                "🔍 Certifique-se de que o modo sugestões é apropriado para este conteúdo",
+                                "⚙️ Considere usar outro modo de análise"
+                            ],
+                            step_suggestions: [
+                                "1. Verifique o formato do conteúdo",
+                                "2. Tente reformular a entrada",
+                                "3. Considere usar o modo direto"
+                            ],
+                            learning_resources: [],
+                            suggested_path: [],
+                            progress_markers: [],
+                            common_mistakes: [],
+                            validation_points: [],
+                            encouragement: [
+                                "✨ Não desanime, vamos tentar de outra forma!",
+                                "💪 Cada tentativa nos aproxima da solução ideal"
+                            ]
                         });
                     }
-                }
-                // Remover estas linhas duplicadas
-                // const response = await result.response;
-                // console.log('Resposta final:', response.text());
-                // return response.text();
+                } else {
+                    return text; // Adicionando return explícito aqui
 
-            case 'openai':
+                }
+                case 'openai': // Fixing indentation
                 // Implementar chamada para OpenAI aqui
                 throw new Error('OpenAI ainda não implementado');
-            case 'anthropic':
+
+                case 'anthropic':
                 // Implementar chamada para Anthropic aqui
                 throw new Error('Anthropic ainda não implementado');
-            case 'cohere':
+
+                case 'cohere':
                 // Implementar chamada para Cohere aqui
                 throw new Error('Cohere ainda não implementado');
-            default:
+
+                default:
                 throw new Error(`Provedor ${provider} não suportado`);
         }
     } catch (error) {

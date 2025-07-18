@@ -1781,49 +1781,46 @@ ipcMain.handle('send-chat-message', async (event, prompt) => {
     }
 });
 
-// Handler para mensagens da janela de resposta direta
-ipcMain.handle('send-direct-message', async (event, message) => {
-    const currentWindow = BrowserWindow.fromWebContents(event.sender);
-    const windowId = currentWindow.id;
-    
+// Handler para processar mensagens da janela de sugestão
+ipcMain.handle('send-message', async (event, message) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return;
+
+    const windowId = win.id;
     try {
-        // Obtém o histórico da conversa
+        // Obter histórico da conversa
         if (!conversationHistories.has(windowId)) {
             conversationHistories.set(windowId, []);
         }
         const history = conversationHistories.get(windowId);
         
-        // Adiciona a nova mensagem do usuário ao histórico
-        history.push(message);
-        
-        // Obtém o texto original se disponível
+        // Obter texto original se disponível
         const originalText = originalCapturedTexts.get(windowId) || '';
         
-        // Cria um contexto mais completo para a IA
+        // Criar contexto para a IA
         let contextForAI = message;
         if (originalText && history.length <= 5) {
-            contextForAI = `Contexto original: "${originalText}"\n\nSolicitação: ${message}`;
+            contextForAI = `Original context: "${originalText}"\n\nRequest: ${message}`;
         }
         
-        // Usar o serviço de IA com contexto completo
+        // Obter resposta da IA usando o modo padrão
         const response = await aiService.getAIResponse({
             text: contextForAI,
-            mode: 'directo',
+            mode: defaultSelectedMode,
             conversationHistory: history,
             signal: null
         });
         
-        // Adiciona a resposta da IA ao histórico
+        // Atualizar histórico
+        history.push(message);
         history.push(response);
         
         return response;
     } catch (error) {
-        console.error('Erro ao processar mensagem direta:', error);
+        console.error('Error processing message:', error);
         throw error;
     }
 });
-
-
 
 // Handler para mensagens éticas
 ipcMain.handle('send-ethical-message', async (event, message) => {
