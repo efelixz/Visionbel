@@ -1,6 +1,6 @@
-# Visilbela
+# Visionbel
 
-Visilbela é uma aplicação de captura de tela e OCR que permite extrair e processar texto de imagens usando tecnologias modernas.
+Visionbel é uma aplicação de captura de tela e OCR que permite extrair e processar texto de imagens usando tecnologias modernas.
 
 ## Recursos
 
@@ -20,8 +20,8 @@ Visilbela é uma aplicação de captura de tela e OCR que permite extrair e proc
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/seu-usuario/visilbela.git
-cd visilbela
+git clone https://github.com/seu-usuario/Visionbel.git
+cd Visionbel
 ```
 
 2. Instale as dependências:
