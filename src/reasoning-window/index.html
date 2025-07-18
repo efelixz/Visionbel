@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html class="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Raciocínio Profundo Visionbel™</title>
+    <link rel="stylesheet" href="../styles/output.css">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans antialiased">
+    <div id="container" class="flex flex-col h-screen w-screen">
+        <!-- Header com área arrastável -->
+        <header id="titlebar" class="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700 flex-shrink-0 drag-handle">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-semibold text-sm">RP</span>
+                </div>
+                <h1 class="text-lg font-semibold text-white">Raciocínio Profundo</h1>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="minimizeBtn" class="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded-lg transition-colors duration-200 no-drag">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                    </svg>
+                </button>
+                <button id="closeBtn" class="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded-lg transition-colors duration-200 no-drag">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Área de Conteúdo Principal -->
+        <div class="flex flex-1 min-h-0 overflow-hidden bg-gray-900">
+            <!-- Área Principal de Raciocínio -->
+            <main class="flex-1 flex flex-col">
+                <div id="reasoning-content" class="flex-1 p-6 overflow-y-auto bg-gray-900">
+                    <!-- Conteúdo será inserido dinamicamente -->
+                </div>
+                
+                <!-- Footer para botões de ação -->
+                <footer id="footer" class="p-4 bg-gray-800 border-t border-gray-700">
+                    <div class="flex justify-end gap-4">
+                        <button id="copyBtn" class="action-button secondary">
+                            📋 Copiar
+                        </button>
+                        <button id="applyBtn" class="action-button primary">
+                            ✨ Aplicar Raciocínio
+                        </button>
+                    </div>
+                </footer>
+            </main>
+
+            <!-- Área de Detalhes do Raciocínio -->
+            <div id="details-area" class="flex flex-col bg-gray-900 border-l border-gray-700 w-96">
+                <div class="flex-1 overflow-y-auto">
+                    <div id="reasoning-steps" class="space-y-4 p-4">
+                        <!-- Passos do raciocínio serão inseridos aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html>

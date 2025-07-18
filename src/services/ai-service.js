@@ -425,92 +425,131 @@ const retryWithBackoff = async (fn, maxRetries = 3) => {
 };
 
 // Função para processar nível de profundidade no prompt
-function processPromptWithDepthLevel(prompt, depthLevel = 'intermediario') {
-    return prompt.replace('{DEPTH_LEVEL}', depthLevel.toUpperCase());
+// ... existing code ...
+
+// Definir recursos complementares disponíveis
+const complementaryResources = {
+    concept_explanation: {
+        type: 'concept_explanation',
+        icon: '🎓',
+        description: 'Explicação detalhada de conceito técnico',
+        formatResponse: (concept, explanation) => `
+🎓 Explicação do Conceito: ${concept}
+
+${explanation}
+
+💡 Aplicação Prática:
+- Como usar: [exemplo básico]
+- Quando usar: [casos de uso]
+- Dica extra: [insight adicional]`
+    },
+    alternative_approach: {
+        type: 'alternative_approach',
+        icon: '🔄',
+        description: 'Sugestão de abordagem alternativa',
+        formatResponse: (currentApproach, alternativeApproach) => `
+🔄 Abordagem Alternativa:
+
+📍 Atual: ${currentApproach}
+↓
+🔍 Alternativa: ${alternativeApproach}
+
+💭 Reflexão:
+- Vantagens: [pontos positivos]
+- Desafios: [pontos a considerar]
+- Escolha: [quando preferir cada uma]`
+    },
+    expand_hint: {
+        type: 'expand_hint',
+        icon: '🧩',
+        description: 'Detalhamento de uma dica específica',
+        formatResponse: (hint, details) => `
+🧩 Expansão da Dica:
+
+📌 Dica Original: ${hint}
+
+🔍 Detalhamento:
+${details}
+
+💡 Pontos-Chave:
+- Conceito base: [fundamento]
+- Aplicação: [como usar]
+- Próximos passos: [sugestão de continuidade]`
+    },
+    hint_history: {
+        type: 'hint_history',
+        icon: '📈',
+        description: 'Histórico de dicas fornecidas',
+        formatResponse: (hints) => `
+📈 Histórico de Dicas:
+
+${hints.map((hint, index) => `${index + 1}. ${hint.text}
+   ↳ Foco: ${hint.focus}
+   ↳ Progresso: ${hint.progress}`).join('\n\n')}
+
+🎯 Progresso:
+- Conceitos abordados: [lista]
+- Próximo foco sugerido: [recomendação]`
+    }
+};
+
+// Função para processar recurso complementar
+function processComplementaryResource(resourceType, context) {
+    const resource = complementaryResources[resourceType];
+    if (!resource) return null;
+
+    switch (resourceType) {
+        case 'concept_explanation':
+            return resource.formatResponse(
+                context.concept,
+                context.explanation
+            );
+        case 'alternative_approach':
+            return resource.formatResponse(
+                context.currentApproach,
+                context.alternativeApproach
+            );
+        case 'expand_hint':
+            return resource.formatResponse(
+                context.hint,
+                context.details
+            );
+        case 'hint_history':
+            return resource.formatResponse(
+                context.hints || []
+            );
+        default:
+            return null;
+    }
 }
 
-// Modificar a função getAIResponse para incluir nível
-async function getAIResponse(prompt, screenshot = null, mode = 'directo', depthLevel = 'intermediario') {
-    if (!genAI) {
-        await initializeAI();
+// Modificar a função getAIResponse para incluir recursos complementares
+async function getAIResponse({ 
+    text, 
+    mode, 
+    resource = null, 
+    resourceContext = {}, 
+    conversationHistory = [],
+    signal = null 
+}) {
+    // Busca a chave da API do banco de dados
+    const apiKeyData = await databaseService.getApiKey("gemini");
+    const key = apiKeyData?.api_key;
+    // Use only one declaration for model and fallbackModel
+    // Get model from API key data or use default, ensuring no redeclaration
+    if (!apiKeyData?.model) {
+        const model = 'gemini-2.0-flash-exp';
     }
-
-    if (!genAI) {
+    // Use fallback model from API key data or default
+    const modelFallback = apiKeyData?.fallback_model || 'gemini-1.5-flash-latest';
+    if (!key) {
         return "Erro: Nenhuma chave da API configurada. Por favor, configure uma chave nas configurações do aplicativo.";
     }
-
-    try {
-        // Verifica cancelamento antes de iniciar
-        if (signal && signal.aborted) {
-            throw new Error('Operação cancelada');
-        }
-        
-        const { primaryModel, fallbackModel } = await getModelWithFallback();
-        
-        // NOVO: Lógica dinâmica para buscar o prompt
-        const customPrompts = await settingsService.getCustomPrompts();
-        const promptTemplate = customPrompts[mode] || defaultPrompts[mode];
-        
-        if (!promptTemplate) {
-            return `Erro: Modo '${mode}' não reconhecido ou sem prompt definido.`;
-        }
-
-        // Verifica cancelamento antes da chamada da API
-        if (signal && signal.aborted) {
-            throw new Error('Operação cancelada');
-        }
-
-        // Monta o prompt final
-        const prompt = `${promptTemplate} "${text}"`;
-
-        // NOVO: Operação com fallback
-        const operation = async (modelName) => {
-            const model = genAI.getGenerativeModel({ model: modelName });
-            const aiPromise = model.generateContent(prompt);
-            
-            if (signal) {
-                const cancelPromise = new Promise((_, reject) => {
-                    signal.addEventListener('abort', () => {
-                        reject(new Error('Operação cancelada'));
-                    });
-                });
-                return await Promise.race([aiPromise, cancelPromise]);
-            } else {
-                return await aiPromise;
-            }
-        };
-        
-        const result = await executeWithFallback(operation, primaryModel, fallbackModel);
-        const response = await result.response;
-        let aiText = response.text();
-        
-        // Remove formatação markdown se for modo destaque
-        if (mode === 'destaque') {
-            aiText = aiText.replace(/```json\s*|```\s*|`/g, '');
-            aiText = aiText.trim();
-            
-            if (!aiText.startsWith('{') || !aiText.endsWith('}')) {
-                throw new Error('Resposta da IA não está no formato JSON esperado');
-            }
-        }
-        
-        console.log('Resposta do Gemini recebida com sucesso.');
-        return aiText;
-
-    } catch (error) {
-        if (error.message.includes('cancelada') || error.message.includes('Operação cancelada')) {
-            throw new Error('IA cancelada pelo usuário');
-        }
-        
-        // NOVO: Tratamento específico para erro de quota
-        if (error.status === 429) {
-            return "⚠️ Limite diário da API atingido. Tente novamente amanhã ou considere fazer upgrade do plano. Para mais informações: https://ai.google.dev/gemini-api/docs/rate-limits";
-        }
-        
-        console.error('Erro ao chamar a API do Google AI:', error);
-        return `Ocorreu um erro ao conectar com o Gemini. Detalhes: ${error.message}`;
-    }
+    const genAI = new GoogleGenerativeAI(key);
+    const { model = 'gemini-2.0-flash-exp', fallbackModel = 'gemini-1.5-flash-latest' } = apiSettings;
+    // ... rest of your prompt/template/model fallback logic ...
 }
+
 const { getApiKey } = require('./database-service');
 
 async function getAIResponse(provider, prompt) {

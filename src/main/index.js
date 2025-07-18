@@ -16,7 +16,11 @@ const dbService = require('../services/database-service');
 let mainWindow;
 let tray = null;
 let quickCaptureEnabled = true;
-// NOVO: Controle de estado da análise
+let autocorrectionWindow = null;
+let reasoningWindow = null;
+let directResponseWindow = null;
+let ethicalWindow = null;
+let floatingButtonWindow = null;
 let isAnalysisRunning = false;
 let currentAnalysisController = null;
 const defaultSelectedMode = 'sugestao'; // Default mode for storing selected mode
@@ -593,8 +597,8 @@ async function executeFullCaptureFlow(mode) {
         // MODIFICADO: Passa o 'mode' para a função de salvar
         dbService.addHistory(text, aiResponseText, durationInSeconds, mode);
 
-        // MODIFICADO: Popup de sugestão para modos sugestao e autocorrecao
-        if ((mode === 'sugestao' || mode === 'autocorrecao') && capturedRect) {
+        // MODIFICADO: Separando o modo de autocorreção do modo de sugestão
+        if (mode === 'sugestao' && capturedRect) {
             // Fecha o popup de "Pensando..." antes de mostrar o popup de sugestões
             if (thinkingWindow && !thinkingWindow.isDestroyed()) {
                 thinkingWindow.close();
@@ -628,19 +632,13 @@ async function executeFullCaptureFlow(mode) {
                 maxHeight: screenHeight,
                 webPreferences: {
                     preload: path.join(__dirname, '../suggestion-window/preload.js'),
-                    contextIsolation: true
-                }
-            });
-
-            // Prevenir o fechamento e minimizar
-            suggestionWindow.on('close', (event) => {
-                if (!app.isQuiting) {
-                    event.preventDefault();
-                    suggestionWindow.minimize();
+                    contextIsolation: true,
+                    devTools: true
                 }
             });
 
             suggestionWindow.loadFile('src/suggestion-window/index.html');
+            suggestionWindow.webContents.openDevTools();
 
             suggestionWindow.webContents.on('did-finish-load', () => {
                 const windowId = suggestionWindow.id;
@@ -686,10 +684,8 @@ async function executeFullCaptureFlow(mode) {
                 console.log(`Janela de sugestão ${windowId} fechada e recursos limpos`);
             });
         }
-
-        // MODIFICADO: Interface para todos os outros modos incluindo raciocinio
-        else if ((mode === 'directo' || mode === 'etico' || mode === 'raciocinio') && capturedRect) {
-            // Fecha o popup de "Pensando..." antes de mostrar o popup de resposta
+        else if (mode === 'autocorrecao' && capturedRect) {
+            // Fecha o popup de "Pensando..." antes de mostrar o popup de autocorreção
             if (thinkingWindow && !thinkingWindow.isDestroyed()) {
                 thinkingWindow.close();
             }
@@ -697,15 +693,15 @@ async function executeFullCaptureFlow(mode) {
             // Obtém as dimensões da tela
             const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
             
-            // Calcula dimensões responsivas para janelas menores
-            const windowWidth = Math.min(Math.max(Math.floor(screenWidth * 0.4), 450), 600);
-            const windowHeight = Math.min(Math.max(mode === 'raciocinio' ? Math.floor(screenHeight * 0.6) : Math.floor(screenHeight * 0.5), mode === 'raciocinio' ? 500 : 400), 700);
+            // Calcula dimensões responsivas (80% da tela, mas com limites)
+            const windowWidth = Math.min(Math.max(Math.floor(screenWidth * 0.8), 800), 1400);
+            const windowHeight = Math.min(Math.max(Math.floor(screenHeight * 0.8), 600), 900);
             
             // Centraliza a janela na tela
             const x = Math.floor((screenWidth - windowWidth) / 2);
             const y = Math.floor((screenHeight - windowHeight) / 2);
             
-            const responseWindow = new BrowserWindow({
+            const autocorrectionWindow = new BrowserWindow({
                 x: x,
                 y: y,
                 width: windowWidth,
@@ -714,24 +710,24 @@ async function executeFullCaptureFlow(mode) {
                 transparent: true,
                 alwaysOnTop: true,
                 skipTaskbar: true,
-                resizable: true, // Permite redimensionar
-                movable: true, // Permite mover
-                minWidth: 400,
-                minHeight: 300,
+                resizable: true,
+                movable: true,
+                minWidth: 600,
+                minHeight: 400,
                 maxWidth: screenWidth,
                 maxHeight: screenHeight,
                 webPreferences: {
-                    preload: path.join(__dirname, '../suggestion-window/preload.js'),
+                    preload: path.join(__dirname, '../autocorrection-window/preload.js'),
                     contextIsolation: true
                 }
             });
 
-            responseWindow.loadFile('src/suggestion-window/index.html');
+            autocorrectionWindow.loadFile('src/autocorrection-window/index.html');
 
-            responseWindow.webContents.on('did-finish-load', () => {
-                const windowId = responseWindow.id;
+            autocorrectionWindow.webContents.on('did-finish-load', () => {
+                const windowId = autocorrectionWindow.id;
                 
-                // NOVO: Salvar o texto original capturado
+                // Salvar o texto original capturado
                 originalCapturedTexts.set(windowId, text);
                 
                 // Inicializar o histórico da conversa
@@ -744,8 +740,200 @@ async function executeFullCaptureFlow(mode) {
                 history.push(`Texto capturado: "${text}"`);
                 history.push(aiResponseText);
                 
-                // Envia as sugestões para a janela
-                responseWindow.webContents.send('send-suggestions', { 
+                // Envia as correções para a janela
+                autocorrectionWindow.webContents.send('send-corrections', { 
+                    corrections: aiResponseText, 
+                    mode: mode,
+                    originalText: text,
+                    hasInitialContext: true
+                });
+            });
+            
+            autocorrectionWindow.on('closed', () => {
+                const windowId = autocorrectionWindow.id;
+                // Limpa o histórico da conversa e o texto original
+                conversationHistories.delete(windowId);
+                originalCapturedTexts.delete(windowId);
+                
+                // Garante que o thinkingWindow também seja fechado se ainda estiver aberto
+                if (thinkingWindow && !thinkingWindow.isDestroyed()) {
+                    thinkingWindow.close();
+                }
+                
+                // Força garbage collection para liberar memória
+                if (global.gc) {
+                    global.gc();
+                }
+                
+                console.log(`Janela de autocorreção ${windowId} fechada e recursos limpos`);
+            });
+        }
+
+        // MODIFICADO: Interface para todos os outros modos incluindo raciocinio
+        else if (mode === 'raciocinio' && capturedRect) {
+            if (thinkingWindow && !thinkingWindow.isDestroyed()) {
+                thinkingWindow.close();
+            }
+            
+            const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+            const windowWidth = Math.min(Math.max(Math.floor(screenWidth * 0.6), 600), 1000);
+            const windowHeight = Math.min(Math.max(Math.floor(screenHeight * 0.6), 500), 800);
+            
+            const x = Math.floor((screenWidth - windowWidth) / 2);
+            const y = Math.floor((screenHeight - windowHeight) / 2);
+            
+            reasoningWindow = new BrowserWindow({
+                x: x,
+                y: y,
+                width: windowWidth,
+                height: windowHeight,
+                frame: false,
+                transparent: true,
+                alwaysOnTop: true,
+                skipTaskbar: true,
+                resizable: true,
+                movable: true,
+                minWidth: 500,
+                minHeight: 400,
+                maxWidth: screenWidth,
+                maxHeight: screenHeight,
+                webPreferences: {
+                    preload: path.join(__dirname, '../reasoning-window/preload.js'),
+                    contextIsolation: true,
+                }
+            });
+
+            reasoningWindow.loadFile('src/reasoning-window/index.html');
+            reasoningWindow.webContents.openDevTools(); // Abre DevTools automaticamente
+
+            reasoningWindow.webContents.on('did-finish-load', () => {
+                const windowId = reasoningWindow.id;
+                
+                originalCapturedTexts.set(windowId, text);
+                
+                if (!conversationHistories.has(windowId)) {
+                    conversationHistories.set(windowId, []);
+                }
+                const history = conversationHistories.get(windowId);
+                
+                history.push(`Texto capturado: "${text}"`);
+                history.push(aiResponseText);
+                
+                reasoningWindow.webContents.send('send-suggestions', { 
+                    suggestions: aiResponseText, 
+                    mode: mode,
+                    originalText: text,
+                    hasInitialContext: true
+                });
+            });
+        }
+        else if (mode === 'directo' && capturedRect) {
+            if (thinkingWindow && !thinkingWindow.isDestroyed()) {
+                thinkingWindow.close();
+            }
+            
+            const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+            const windowWidth = Math.min(Math.max(Math.floor(screenWidth * 0.4), 450), 600);
+            const windowHeight = Math.min(Math.max(Math.floor(screenHeight * 0.5), 400), 700);
+            
+            const x = Math.floor((screenWidth - windowWidth) / 2);
+            const y = Math.floor((screenHeight - windowHeight) / 2);
+            
+            directResponseWindow = new BrowserWindow({
+                x: x,
+                y: y,
+                width: windowWidth,
+                height: windowHeight,
+                frame: false,
+                transparent: true,
+                alwaysOnTop: true,
+                skipTaskbar: true,
+                resizable: true,
+                movable: true,
+                minWidth: 400,
+                minHeight: 300,
+                maxWidth: screenWidth,
+                maxHeight: screenHeight,
+                webPreferences: {
+                    preload: path.join(__dirname, '../direct-response-window/preload.js'),
+                    contextIsolation: true,
+                }
+            });
+
+            directResponseWindow.loadFile('src/direct-response-window/index.html');
+            directResponseWindow.webContents.openDevTools(); // Abre DevTools automaticamente
+
+            directResponseWindow.webContents.on('did-finish-load', () => {
+                const windowId = directResponseWindow.id;
+                
+                originalCapturedTexts.set(windowId, text);
+                
+                if (!conversationHistories.has(windowId)) {
+                    conversationHistories.set(windowId, []);
+                }
+                const history = conversationHistories.get(windowId);
+                
+                history.push(`Texto capturado: "${text}"`);
+                history.push(aiResponseText);
+                
+                directResponseWindow.webContents.send('send-suggestions', { 
+                    suggestions: aiResponseText, 
+                    mode: mode,
+                    originalText: text,
+                    hasInitialContext: true
+                });
+            });
+        }
+        else if (mode === 'etico' && capturedRect) {
+            if (thinkingWindow && !thinkingWindow.isDestroyed()) {
+                thinkingWindow.close();
+            }
+            
+            const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+            const windowWidth = Math.min(Math.max(Math.floor(screenWidth * 0.4), 450), 600);
+            const windowHeight = Math.min(Math.max(Math.floor(screenHeight * 0.5), 400), 700);
+            
+            const x = Math.floor((screenWidth - windowWidth) / 2);
+            const y = Math.floor((screenHeight - windowHeight) / 2);
+            
+            ethicalWindow = new BrowserWindow({
+                x: x,
+                y: y,
+                width: windowWidth,
+                height: windowHeight,
+                frame: false,
+                transparent: true,
+                alwaysOnTop: true,
+                skipTaskbar: true,
+                resizable: true,
+                movable: true,
+                minWidth: 400,
+                minHeight: 300,
+                maxWidth: screenWidth,
+                maxHeight: screenHeight,
+                webPreferences: {
+                    preload: path.join(__dirname, '../ethical-window/preload.js'),
+                    contextIsolation: true,
+                }
+            });
+
+            ethicalWindow.loadFile('src/ethical-window/index.html');
+            ethicalWindow.webContents.openDevTools(); // Abre DevTools automaticamente
+
+            ethicalWindow.webContents.on('did-finish-load', () => {
+                const windowId = ethicalWindow.id;
+                
+                originalCapturedTexts.set(windowId, text);
+                
+                if (!conversationHistories.has(windowId)) {
+                    conversationHistories.set(windowId, []);
+                }
+                const history = conversationHistories.get(windowId);
+                
+                history.push(`Texto capturado: "${text}"`);
+                history.push(aiResponseText);
+                
+                ethicalWindow.webContents.send('send-suggestions', { 
                     suggestions: aiResponseText, 
                     mode: mode,
                     originalText: text,
@@ -1334,6 +1522,23 @@ ipcMain.handle('send-chat-message', async (event, prompt) => {
         throw error;
     }
 });
+
+// Handlers para controles da janela de autocorreção
+ipcMain.on('minimize-autocorrection-window', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win) {
+        win.minimize();
+    }
+});
+
+ipcMain.on('close-autocorrection-window', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win) {
+        win.close();
+    }
+});
+
+
 
 // Add these handlers after the other ipcMain.handle declarations
 ipcMain.handle('set-mode', async (event, mode) => {

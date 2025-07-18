@@ -1,22 +1,20 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('suggestionAPI', {
-    onReceiveSuggestions: (callback) => ipcRenderer.on('send-suggestions', callback),
-    closeWindow: () => ipcRenderer.send('close-suggestion-window'),
-    applyFix: (code) => ipcRenderer.send('apply-fix', code),
-    sendAdditionalContext: (context) => ipcRenderer.send('send-additional-context', context),
-    requestNewCapture: () => ipcRenderer.send('request-new-capture'),
-    setPinned: (pinned) => ipcRenderer.send('set-suggestion-pinned', pinned),
-    moveWindow: () => ipcRenderer.send('move-suggestion-window'),
-    minimizeWindow: () => ipcRenderer.send('minimize-suggestion-window'),
-    // Eventos para chat e verificação de contexto
-    onChatLoading: (callback) => ipcRenderer.on('chat-loading', callback),
-    onChatResponse: (callback) => ipcRenderer.on('chat-response', callback),
-    onShowInteractionArea: (callback) => ipcRenderer.on('show-interaction-area', callback),
-    // Métodos para remover listeners (para limpeza)
-    removeChatLoadingListener: (callback) => ipcRenderer.removeListener('chat-loading', callback),
-    removeChatResponseListener: (callback) => ipcRenderer.removeListener('chat-response', callback),
-    removeShowInteractionListener: (callback) => ipcRenderer.removeListener('show-interaction-area', callback),
-    // Função para enviar mensagens de chat
-    sendChatMessage: (prompt) => ipcRenderer.invoke('send-chat-message', prompt)
+contextBridge.exposeInMainWorld('suggestion', {
+    minimize: () => ipcRenderer.send('minimize-suggestion-window'),
+    close: () => ipcRenderer.send('close-suggestion-window'),
+    onSuggestions: (callback) => {
+        ipcRenderer.on('send-suggestions', (event, data) => callback(data));
+    },
+    applySuggestion: (suggestion) => ipcRenderer.send('apply-suggestion', suggestion),
+    copySuggestion: (suggestion) => ipcRenderer.send('copy-suggestion', suggestion)
+});
+
+contextBridge.exposeInMainWorld('electronAPI', {
+    onDisplaySuggestions: (callback) => ipcRenderer.on('display-suggestions', callback),
+    onSuggestionError: (callback) => ipcRenderer.on('suggestion-error', callback),
+    onProcessingStart: (callback) => ipcRenderer.on('processing-start', callback),
+    onChatMessage: (callback) => ipcRenderer.on('chat-message', callback),
+    sendChatMessage: (message) => ipcRenderer.send('send-chat-message', message),
+    requestNewCapture: () => ipcRenderer.send('request-new-capture')
 });

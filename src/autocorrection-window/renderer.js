@@ -6,14 +6,15 @@ const chatInput = document.querySelector('textarea');
 const sendButton = document.querySelector('button:contains("Enviar")');
 const newCaptureButton = document.querySelector('button:contains("Nova Captura")');
 const copyButton = document.querySelector('button:contains("Copiar")');
-const applyButton = document.querySelector('button:contains("Aplicar Sugestão")');
+const applyButton = document.querySelector('button:contains("Aplicar Correção")');
 const depthSelect = document.querySelector('select');
 const contextIndicator = document.querySelector('.w-2.h-2');
-const contextStatus = document.querySelector('span:contains("Detectando")');
+const contextStatus = document.querySelector('span:contains("Detectando")'); 
 
 // Estado global
 let isProcessing = false;
-let suggestions = [];
+let corrections = [];
+
 // Funções de UI
 function updateContextStatus(status, type = 'detecting') {
     const colors = {
@@ -34,18 +35,15 @@ function addMessage(text, isUser = false) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function displaySuggestions(data) {
-    const container = document.getElementById('suggestions-content');
+function displayCorrections(correctionsList) {
+    const container = document.getElementById('corrections-content');
     container.innerHTML = '';
     
-    // Verifica se data é um objeto ou array
-    const suggestionsList = Array.isArray(data) ? data : [data.suggestions];
-    
-    suggestionsList.forEach((suggestion, index) => {
+    correctionsList.forEach((correction, index) => {
         const element = document.createElement('div');
-        element.className = 'suggestion-item';
+        element.className = 'correction-item';
         element.style.animationDelay = `${index * 0.1}s`;
-        element.innerHTML = suggestion;
+        element.innerHTML = correction;
         container.appendChild(element);
     });
 }
@@ -55,7 +53,7 @@ sendButton.addEventListener('click', () => {
     const text = chatInput.value.trim();
     if (text) {
         addMessage(text, true);
-        window.electronAPI.sendChatMessage(text);
+        ipcRenderer.send('send-chat-message', text);
         chatInput.value = '';
     }
 });
@@ -68,47 +66,34 @@ chatInput.addEventListener('keypress', (e) => {
 });
 
 newCaptureButton.addEventListener('click', () => {
-    window.electronAPI.requestNewCapture();
+    ipcRenderer.send('request-new-capture');
 });
 
 copyButton.addEventListener('click', () => {
-    if (suggestions.length > 0) {
-        window.suggestion.copySuggestion(suggestions);
-    }
+    // Implementar lógica de cópia
 });
 
 applyButton.addEventListener('click', () => {
-    if (suggestions.length > 0) {
-        window.suggestion.applySuggestion(suggestions);
-    }
+    ipcRenderer.send('apply-corrections', corrections);
 });
 
 depthSelect.addEventListener('change', (e) => {
-    window.electronAPI.sendChatMessage(`/depth ${e.target.value}`);
+    ipcRenderer.send('change-depth-level', e.target.value);
 });
 
 // IPC Handlers
-window.suggestion.onSuggestions((data) => {
-    suggestions = data;
-    displaySuggestions(suggestions);
+ipcRenderer.on('correction-update', (event, data) => {
+    corrections = data.corrections;
+    displayCorrections(corrections);
     updateContextStatus('Ativo', 'active');
 });
 
-window.electronAPI.onDisplaySuggestions((event, data) => {
-    suggestions = data;
-    displaySuggestions(suggestions);
-});
-
-window.electronAPI.onSuggestionError((event, error) => {
-    updateContextStatus('Erro: ' + error, 'error');
-});
-
-window.electronAPI.onProcessingStart(() => {
-    updateContextStatus('Processando...', 'detecting');
-});
-
-window.electronAPI.onChatMessage((event, message) => {
+ipcRenderer.on('ai-response', (event, message) => {
     addMessage(message);
+});
+
+ipcRenderer.on('processing-status', (event, { status, type }) => {
+    updateContextStatus(status, type);
 });
 
 // Responsividade
@@ -126,9 +111,9 @@ const minimizeButton = document.querySelector('.minimize-button');
 const closeButton = document.querySelector('.close-button');
 
 minimizeButton.addEventListener('click', () => {
-    window.suggestion.minimize();
+    window.autocorrection.minimize();
 });
 
 closeButton.addEventListener('click', () => {
-    window.suggestion.close();
+    window.autocorrection.close();
 });
