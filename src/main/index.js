@@ -32,6 +32,30 @@ ipcMain.on('update-default-mode', async (event, mode) => {
     updateTrayMenu();
 });
 
+// Handler para definir o modo selecionado
+ipcMain.handle('set-mode', async (event, mode) => {
+    try {
+        defaultSelectedMode = mode;
+        await settingsService.setSetting('defaultMode', mode);
+        updateTrayMenu();
+        return { success: true, mode };
+    } catch (error) {
+        console.error('Erro ao definir modo:', error);
+        return { success: false, error: error.message };
+    }
+});
+
+// Handler para obter o modo selecionado
+ipcMain.handle('get-selected-mode', async () => {
+    try {
+        const mode = await settingsService.getSetting('defaultMode') || defaultSelectedMode;
+        return { success: true, mode };
+    } catch (error) {
+        console.error('Erro ao obter modo:', error);
+        return { success: false, error: error.message };
+    }
+});
+
 // Armazenar histórico de conversa por janela
 const conversationHistories = new Map();
 
@@ -1877,6 +1901,13 @@ ipcMain.on('close-suggestion-window', () => {
 ipcMain.on('close-thinking-window', () => {
     if (thinkingWindow && !thinkingWindow.isDestroyed()) {
         thinkingWindow.close();
+    }
+});
+
+ipcMain.on('move-thinking-window', (event, position) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win && !win.isDestroyed()) {
+        win.setPosition(Math.floor(position.x), Math.floor(position.y));
     }
 });
 

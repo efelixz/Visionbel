@@ -5,95 +5,258 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Processando - Visionbel</title>
     <style>
+        :root {
+            --bg-opacity: 0.85;
+            --primary-color: #3498db;
+            --error-color: #ff4444;
+            --text-color: #ffffff;
+        }
         body {
             margin: 0;
             padding: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
+            background: rgba(15, 23, 42, var(--bg-opacity));
+            backdrop-filter: blur(12px);
+            color: var(--text-color);
             font-family: 'Inter', sans-serif;
-            border-radius: 10px;
+            border-radius: 16px;
             user-select: none;
             -webkit-user-select: none;
             cursor: move;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 240px;
+            max-width: 90vw;
+            min-height: 180px;
+            max-height: 90vh;
+            overflow: hidden;
+            resize: both;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        body:hover {
+            --bg-opacity: 0.9;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.15);
         }
         .container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 160px;
+            min-height: 180px;
+            height: 100%;
+            padding: 15px;
+            box-sizing: border-box;
+            position: relative;
         }
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
+            width: clamp(35px, 6vw, 55px);
+            height: clamp(35px, 6vw, 55px);
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--primary-color);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
+            animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            margin-bottom: clamp(15px, 4vh, 25px);
+            filter: drop-shadow(0 0 8px rgba(52, 152, 219, 0.3));
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
         .text {
-            font-size: 16px;
+            font-size: clamp(15px, 2.2vw, 18px);
             text-align: center;
+            line-height: 1.6;
+            font-weight: 500;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .status {
+            font-size: clamp(13px, 2vw, 15px);
+            color: var(--primary-color);
+            margin-top: clamp(10px, 2.5vh, 18px);
+            opacity: 0.95;
+            font-weight: 400;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 15px rgba(52, 152, 219, 0.4);
         }
         .close-button {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
+            top: 12px;
+            right: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            font-size: clamp(20px, 2.8vw, 24px);
             cursor: pointer;
-            padding: 5px;
+            padding: 8px;
             line-height: 1;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+            z-index: 1000;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .close-button:hover {
-            color: #ff4444;
+            color: var(--error-color);
+            background: rgba(255, 68, 68, 0.15);
+            border-color: rgba(255, 68, 68, 0.3);
+            transform: scale(1.1) rotate(90deg);
+        }
+        .progress-bar {
+            width: 85%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            margin-top: clamp(15px, 3vh, 20px);
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .progress-bar::before,
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent,
+                rgba(52, 152, 219, 0.5),
+                var(--primary-color),
+                rgba(52, 152, 219, 0.5),
+                transparent
+            );
+            animation: progress 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+        .progress-bar::after {
+            animation-delay: 0.5s;
+        }
+        @keyframes progress {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(400%); }
+        }
+        /* Efeito de brilho de fundo */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, 
+                rgba(52, 152, 219, 0.1) 0%,
+                transparent 70%
+            );
+            animation: pulse 4s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+                min-width: 200px;
+            }
+            .container {
+                min-height: 160px;
+            }
+            .close-button {
+                top: 8px;
+                right: 8px;
+                width: 32px;
+                height: 32px;
+            }
         }
     </style>
 </head>
 <body>
-    <button class="close-button" id="close-button">×</button>
+    <button class="close-button" id="close-button" title="Fechar janela">×</button>
     <div class="container">
         <div class="spinner"></div>
-        <div class="text">Processando...</div>
+        <div class="text">Processando sua solicitação</div>
+        <div class="status">Analisando conteúdo...</div>
+        <div class="progress-bar"></div>
     </div>
     <script>
-        // Permite que a janela seja arrastada
-        document.body.addEventListener('mousedown', (e) => {
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+
+        document.body.addEventListener('mousedown', dragStart);
+        document.body.addEventListener('mousemove', drag);
+        document.body.addEventListener('mouseup', dragEnd);
+
+        function dragStart(e) {
             if (e.target.id === 'close-button') return;
-            
-            const startX = e.clientX;
-            const startY = e.clientY;
-            const initialRect = window.getBoundingClientRect();
 
-            function mousemove(e) {
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-                window.windowAPI.moveWindow({
-                    x: initialRect.left + dx,
-                    y: initialRect.top + dy
-                });
-            }
+            initialX = e.clientX;
+            initialY = e.clientY;
+            const rect = window.getBoundingClientRect();
+            currentX = rect.left;
+            currentY = rect.top;
 
-            function mouseup() {
-                window.removeEventListener('mousemove', mousemove);
-                window.removeEventListener('mouseup', mouseup);
-            }
+            isDragging = true;
+            document.body.style.cursor = 'grabbing';
+        }
 
-            window.addEventListener('mousemove', mousemove);
-            window.addEventListener('mouseup', mouseup);
+        function drag(e) {
+            if (!isDragging) return;
+
+            e.preventDefault();
+            const deltaX = e.clientX - initialX;
+            const deltaY = e.clientY - initialY;
+
+            window.windowAPI.moveWindow({
+                x: currentX + deltaX,
+                y: currentY + deltaY
+            });
+        }
+
+        function dragEnd() {
+            isDragging = false;
+            document.body.style.cursor = 'move';
+        }
+
+        // Botão de fechar com animação
+        const closeButton = document.getElementById('close-button');
+        closeButton.addEventListener('click', () => {
+            document.body.style.transform = 'scale(0.9)';
+            document.body.style.opacity = '0';
+            setTimeout(() => window.windowAPI.closeWindow(), 200);
         });
 
-        // Adiciona funcionalidade ao botão de fechar
-        document.getElementById('close-button').addEventListener('click', () => {
-            window.windowAPI.closeWindow();
-        });
+        // Mensagens de status com transição suave e informação sobre fechamento
+        const statusMessages = [
+            'Aguarde um momento',
+            'Você pode fechar esta janela',
+            'A Resposta aparecerá automaticamente',
+            'Processando dados...',
+            'Gerando resposta...',
+            'Analisando conteúdo...',
+            'Conectando a API...',
+        ];
+
+        let currentMessageIndex = 0;
+        const statusElement = document.querySelector('.status');
+
+        function updateStatusMessage() {
+            statusElement.style.opacity = '0';
+            setTimeout(() => {
+                statusElement.textContent = statusMessages[currentMessageIndex];
+                statusElement.style.opacity = '1';
+                currentMessageIndex = (currentMessageIndex + 1) % statusMessages.length;
+            }, 300);
+        }
+
+        // Atualiza a mensagem a cada 3 segundos
+        setInterval(updateStatusMessage, 3000);
+        updateStatusMessage(); // Inicia imediatamente
     </script>
 </body>
 </html>

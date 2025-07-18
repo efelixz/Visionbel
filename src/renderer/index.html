@@ -14,14 +14,10 @@
         <!-- Header Clean -->
         <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-2 sm:gap-4 flex-shrink-0">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center">
-                    <span class="text-white font-semibold text-sm sm:text-lg">SV</span>
-                </div>
                 <div>
-                    <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
-                        VisionBel™
+                    <h1 class="text-xl sm:text-2xl bg-blue-600 rounded text-center lg:text-3xl font-bold text-gray-900 dark:text-white">
+                        VisionBel™ <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Seu Copiloto de Tarefas.</p>
                     </h1>
-                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Seu Copiloto de Tarefas.</p>
                 </div>
             </div>
             <div class="flex flex-wrap gap-2">
@@ -37,7 +33,7 @@
         </header>
 
         <!-- Main Content Clean -->
-        <main class="bg-white dark:bg-gray-800 p-3 sm:p-4 lg:p-6 rounded-xl border border-gray-200 dark:border-gray-700 flex-1 transition-colors duration-300 shadow-sm flex flex-col justify-center min-h-0">
+        <main class="bg-white dark:bg-gray-800  p-8 sm:p-4 lg:p-6 rounded-xl border border-gray-200 dark:border-gray-700 flex-1 transition-colors duration-300 shadow-sm flex flex-col justify-center min-h-0">
             
             <!-- Intro Text -->
             <div class="text-center mb-4 sm:mb-6">
@@ -146,7 +142,50 @@
                 </div>
             </div>
         </main>
+
+        <!-- Footer com visual moderno -->
+        <footer class="mt-4 text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 px-2 sm:px-4 relative overflow-hidden mt-3">
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-50/10 via-purple-50/10 to-pink-50/10 dark:from-blue-900/10 dark:via-purple-900/10 dark:to-pink-900/10 animate-gradient"></div>
+            <div class="relative z-10 backdrop-blur-sm py-3 rounded-lg border border-gray-100/20 dark:border-gray-800/20 shadow-lg">
+                <div class="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                    <p class="whitespace-nowrap flex items-center gap-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-300">
+                        <span class="text-base">👨‍💻</span>
+                        Produzido por 
+                        <a href="https://efelixz.me" target="_blank" rel="noopener noreferrer" 
+                           class="font-medium bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent hover:from-purple-600 hover:to-blue-600 dark:hover:from-purple-400 dark:hover:to-blue-400 transition-all duration-300">
+                            Jefferson Felix
+                        </a>
+                    </p>
+                    <div class="flex items-center space-x-4 sm:space-x-6">
+                        <a href="https://github.com/jeffersonrFelix/Visionbel/blob/main/CONTRIBUTING.md" 
+                           target="_blank" rel="noopener noreferrer" 
+                           class="flex items-center gap-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-300">
+                            <span class="text-base">🤝</span>
+                            <span class="whitespace-nowrap">Como Contribuir</span>
+                        </a>
+                        <a href="https://github.com/sponsors/jeffersonrFelix" 
+                           target="_blank" rel="noopener noreferrer" 
+                           class="flex items-center gap-2 hover:text-pink-500 dark:hover:text-pink-400 transition-colors duration-300">
+                            <span class="text-base">💝</span>
+                            <span class="whitespace-nowrap">Fazer Doação</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </div>
+
+    <style>
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradient 15s ease infinite;
+        }
+    </style>
 
     <script src="renderer.js"></script>
     <script>
