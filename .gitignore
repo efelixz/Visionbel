@@ -1,53 +1,37 @@
-# Dependencies
+# Dependências
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Build outputs
+# Arquivos de build
 dist/
 build/
-out/
 
-# Electron build outputs
-release/
-app/
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
+# Arquivos de ambiente
+.env
+.env.local
+.env.*.local
 
 # Logs
 logs/
 *.log
+npm-debug.log*
 
-# OS generated files
+# Sistema operacional
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
-# IDE files
-.vscode/
+# IDEs e editores
 .idea/
+.vscode/
 *.swp
 *.swo
-*~
 
-# Temporary files
-tmp/
+# Arquivos de banco de dados
+*.sqlite
+*.sqlite3
+
+# Arquivos temporários
 temp/
+.tmp/
 
 # CSS build output
 src/styles/output.css

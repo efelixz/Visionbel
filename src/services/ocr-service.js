@@ -125,11 +125,11 @@ async function recognizeWithDetails(imageDataUrl, signal = null) {
       console.log('Reconhecimento detalhado concluído.');
       return {
           fullText: data.text,
-          words: data.words.map(w => ({
+          words: data.paragraphs?.[0]?.lines?.[0]?.words?.map(w => ({
               text: w.text,
               confidence: w.confidence,
               bbox: w.bbox // { x0, y0, x1, y1 }
-          }))
+          })) || []
       };
     } else {
       // Sem cancelamento, executa normalmente
@@ -139,11 +139,11 @@ async function recognizeWithDetails(imageDataUrl, signal = null) {
       console.log('Reconhecimento detalhado concluído.');
       return {
           fullText: data.text,
-          words: data.words.map(w => ({
+          words: data.paragraphs?.[0]?.lines?.[0]?.words?.map(w => ({
               text: w.text,
               confidence: w.confidence,
               bbox: w.bbox // { x0, y0, x1, y1 }
-          }))
+          })) || []
       };
     }
   } catch (error) {

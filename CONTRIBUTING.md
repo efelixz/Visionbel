@@ -1,73 +1,30 @@
-# 🤝 Contribuindo para o VisionBel™™
+# Guia de Contribuição
 
-Obrigado por considerar contribuir para o SkillVision! Este guia ajudará você a entender como contribuir efetivamente.
+## Como Contribuir
 
-## 📋 Código de Conduta
+1. Faça um fork do projeto
+2. Crie sua branch de feature (`git checkout -b feature/AmazingFeature`)
+3. Faça commit das suas alterações (`git commit -m 'Add some AmazingFeature'`)
+4. Faça push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
 
-Este projeto adere a um código de conduta. Ao participar, você deve manter um ambiente respeitoso e inclusivo.
+## Padrões de Código
 
-## 🚀 Como Contribuir
+- Use ESLint e Prettier para formatação
+- Escreva testes para novas funcionalidades
+- Mantenha a documentação atualizada
+- Siga o padrão de commits convencional
 
-### 🐛 Reportando Bugs
+## Processo de Review
 
-1. Verifique se o bug já foi reportado nas [Issues](https://github.com/seu-usuario/skill-vision-app/issues)
-2. Se não encontrar, crie uma nova issue com:
-   - Título descritivo
-   - Passos para reproduzir
-   - Comportamento esperado vs atual
-   - Screenshots (se aplicável)
-   - Informações do sistema
+1. Mantenha os PRs pequenos e focados
+2. Descreva claramente as mudanças
+3. Inclua screenshots se houver mudanças visuais
+4. Certifique-se que todos os testes passam
 
-### 💡 Sugerindo Melhorias
+## Reportando Bugs
 
-1. Abra uma issue com o label "enhancement"
-2. Descreva claramente a melhoria proposta
-3. Explique por que seria útil
-4. Forneça exemplos de uso
-
-### 🔧 Contribuindo com Código
-
-1. **Fork** o repositório
-2. **Clone** seu fork localmente
-3. **Crie** uma branch para sua feature
-4. **Implemente** suas mudanças
-5. **Teste** thoroughly
-6. **Commit** com mensagens claras
-7. **Push** para sua branch
-8. **Abra** um Pull Request
-
-### 📝 Padrões de Código
-
-- Use **camelCase** para variáveis e funções
-- Use **PascalCase** para classes
-- Comente código complexo
-- Mantenha funções pequenas e focadas
-- Use nomes descritivos
-
-### 🧪 Testes
-
-- Teste todas as funcionalidades modificadas
-- Verifique compatibilidade com diferentes sistemas
-- Teste cenários de erro
-
-## 📚 Desenvolvimento
-
-### Configuração do Ambiente
-
-```bash
-# Clone o repositório
-git clone https://github.com/seu-usuario/skill-vision-app.git
-cd skill-vision-app
-
-# Instale dependências
-npm install
-
-# Configure variáveis de ambiente
-cp .env.example .env
-# Edite .env com suas chaves
-
-# Compile CSS
-npm run build-css
-
-# Execute em modo desenvolvimento
-npm run dev
+1. Use o template de issue para bugs
+2. Inclua passos para reproduzir
+3. Descreva o comportamento esperado
+4. Inclua logs e screenshots relevantes

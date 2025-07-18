@@ -1,49 +1,63 @@
-# 🎯 Visionbel™ - Assistente de IA para Estudos
+# Visilbela
 
-<div align="center">
-  <img src="https://img.shields.io/badge/Electron-28.0.0-blue?style=for-the-badge&logo=electron" alt="Electron">
-  <img src="https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js" alt="Node.js">
-  <img src="https://img.shields.io/badge/Google_AI-Gemini-orange?style=for-the-badge&logo=google" alt="Google AI">
-  <img src="https://img.shields.io/badge/OCR-Tesseract.js-red?style=for-the-badge" alt="OCR">
-</div>
+Visilbela é uma aplicação de captura de tela e OCR que permite extrair e processar texto de imagens usando tecnologias modernas.
 
-## 📋 Descrição
+## Recursos
 
-Visionbel™ é um assistente inteligente de IA desenvolvido para estudantes e profissionais que precisam de análise rápida e precisa de conteúdo visual. O aplicativo utiliza OCR (Reconhecimento Óptico de Caracteres) e IA generativa para interpretar textos, imagens, códigos e questões de múltipla escolha.
+- Captura de tela com atalho global
+- OCR (Reconhecimento Óptico de Caracteres)
+- Processamento de texto com IA
+- Interface moderna com Electron
+- Estilização com Tailwind CSS
+- Armazenamento local com SQLite
 
-## ✨ Funcionalidades Principais
+## Requisitos
 
-### 🔍 **Modos de Análise**
-- **📝 Sugestão**: Fornece 2-3 sugestões práticas para código ou perguntas
-- **🔧 Autocorreção**: Identifica e corrige erros em código automaticamente
-- **🎯 Destaque**: Resolve questões de múltipla escolha retornando apenas a resposta correta
-- **📚 Ético**: Guia o usuário à solução sem dar a resposta direta
-- **⚡ Direto**: Responde questões de forma clara e objetiva
-- **🧠 Raciocínio**: Análise completa e estruturada com metodologia detalhada
+- Node.js (versão 14 ou superior)
+- NPM (Node Package Manager)
 
-### 🖥️ **Interface e Usabilidade**
-- **Captura de Tela Inteligente**: Selecione qualquer área da tela
-- **OCR Avançado**: Reconhecimento de texto em português e outros idiomas
-- **Popup de Sugestões**: Interface moderna com glassmorphism
-- **Popup "Pensando..."**: Feedback visual durante processamento
-- **Atalho Global**: `Ctrl+Shift+X` para captura rápida
-- **Bandeja do Sistema**: Acesso rápido e captura com um clique
+## Instalação
 
-### 📊 **Recursos Avançados**
-- **Histórico Completo**: Todas as interações são salvas com timestamps
-- **Estatísticas de Uso**: Gráficos dos modos mais utilizados
-- **Configurações Personalizáveis**: Prompts customizados para cada modo
-- **Automação**: Aplicação automática de correções no código
-- **Modo Sombra**: Análise silenciosa sem popups
-
-## 🚀 Instalação
-
-### Pré-requisitos
-- **Node.js** 18 ou superior
-- **npm** ou **yarn**
-- **Chave da API do Google Gemini**
-
-### 1. Clone o Repositório
+1. Clone o repositório:
 ```bash
-git clone https://github.com/seu-usuario/skill-vision-app.git
-cd skill-vision-app
+git clone https://github.com/seu-usuario/visilbela.git
+cd visilbela
+```
+
+2. Instale as dependências:
+```bash
+npm install electron --save-dev
+npm install node-key-sender
+npm install @google/generative-ai
+npm install tesseract.js
+npm install sqlite3
+npm install -D tailwindcss@3.4.1 postcss@8.4.35 autoprefixer@10.4.17
+```
+
+## Como Usar
+
+1. Inicie a aplicação:
+```bash
+npm start
+```
+
+2. Use o atalho global `Ctrl+Shift+X` (ou `Cmd+Shift+X` no macOS) para capturar uma área da tela.
+
+3. O texto será automaticamente extraído e processado.
+
+## Como Contribuir
+
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
+3. Faça commit das suas alterações (`git commit -am 'Adiciona nova funcionalidade'`)
+4. Faça push para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um Pull Request
+
+### Diretrizes de Contribuição
+
+- Mantenha o código limpo e bem documentado
+- Siga os padrões de código existentes
+- Escreva testes para novas funcionalidades
+- Atualize a documentação quando necessário
+
+## Estrutura do Projeto
