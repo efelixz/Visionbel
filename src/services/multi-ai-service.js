@@ -116,14 +116,40 @@ async function getAIResponse({ text, mode, signal = null }) {
                 const operation = async (modelName) => {
                     console.log('Tentando modelo:', modelName);
                     const model = genAI.getGenerativeModel({ model: modelName });
-                    const result = await model.generateContent(prompt, { signal });
+                    // Modificar o prompt para forçar resposta em JSON
+                    const jsonPrompt = `${prompt}
+
+                    IMPORTANTE: Sua resposta DEVE ser um objeto JSON válido com a seguinte estrutura:
+                    {"links": ["url1", "url2"], "keywords": ["palavra1", "palavra2"], "important_text": ["texto1", "texto2"]}`;
+                    const result = await model.generateContent(jsonPrompt, { signal });
                     console.log('Resposta recebida:', result);
                     return result;
                 };
                 const result = await executeWithFallback('gemini', operation, models.primary, models.fallback);
                 const response = await result.response;
-                console.log('Resposta final:', response.text());
-                return response.text();
+                const text = response.text();
+                
+                // Garantir que a resposta seja um JSON válido
+                try {
+                    // Remover formatação markdown se presente
+                    const cleanText = text.replace(/```json\s*|```\s*|`/g, '').trim();
+                    // Tentar fazer o parse do JSON
+                    JSON.parse(cleanText);
+                    console.log('Resposta final (JSON válido):', cleanText);
+                    return cleanText;
+                } catch (error) {
+                    console.error('Erro ao processar JSON:', error);
+                    // Retornar um JSON válido com mensagem de erro
+                    return JSON.stringify({
+                        links: [],
+                        keywords: [],
+                        important_text: [`Erro ao processar resposta: ${error.message}`]
+                    });
+                }
+                // Remover estas linhas duplicadas
+                // const response = await result.response;
+                // console.log('Resposta final:', response.text());
+                // return response.text();
 
             case 'openai':
                 // Implementar chamada para OpenAI aqui

@@ -95,6 +95,48 @@ toggleKeyButton.addEventListener('click', () => {
     toggleKeyButton.textContent = type === 'password' ? '🔒' : '👁️';
 });
 
+// Função para formatar mensagens de erro específicas por provedor
+function formatErrorMessage(provider, error) {
+    const errorMessage = error.message.toLowerCase();
+    
+    // Mensagens específicas para o Gemini
+    if (provider === 'gemini') {
+        if (errorMessage.includes('api key not valid') || errorMessage.includes('api_key_invalid')) {
+            return 'A chave da API do Google Gemini é inválida. Por favor, verifique se você inseriu a chave corretamente.';
+        }
+        if (errorMessage.includes('quota exceeded')) {
+            return 'Sua cota da API do Gemini foi excedida. Por favor, verifique seus limites de uso.';
+        }
+    }
+    
+    // Mensagens específicas para OpenAI
+    if (provider === 'openai') {
+        if (errorMessage.includes('invalid api key')) {
+            return 'A chave da API da OpenAI é inválida. Por favor, verifique se você inseriu a chave corretamente.';
+        }
+        if (errorMessage.includes('rate limit')) {
+            return 'Limite de requisições da OpenAI atingido. Por favor, aguarde um momento e tente novamente.';
+        }
+    }
+    
+    // Mensagens específicas para Anthropic
+    if (provider === 'anthropic') {
+        if (errorMessage.includes('invalid api key') || errorMessage.includes('invalid_api_key')) {
+            return 'A chave da API do Claude é inválida. Por favor, verifique se você inseriu a chave corretamente.';
+        }
+    }
+    
+    // Mensagens específicas para Cohere
+    if (provider === 'cohere') {
+        if (errorMessage.includes('invalid api key') || errorMessage.includes('invalid_api_key')) {
+            return 'A chave da API da Cohere é inválida. Por favor, verifique se você inseriu a chave corretamente.';
+        }
+    }
+    
+    // Mensagem genérica para outros erros
+    return `Erro ao conectar com ${PROVIDERS_DATA[provider].name}. Por favor, verifique sua chave e conexão.`;
+}
+
 // Testar conexão
 async function testConnection() {
     const provider = providerSelect.value;
@@ -116,10 +158,10 @@ async function testConnection() {
         if (result.success) {
             showStatus('Conexão estabelecida com sucesso!', 'success');
         } else {
-            showStatus(`Erro: ${result.message || 'Falha no teste de conexão'}`, 'error');
+            showStatus(formatErrorMessage(provider, { message: result.message }), 'error');
         }
     } catch (error) {
-        showStatus(`Erro inesperado: ${error.message}`, 'error');
+        showStatus(formatErrorMessage(provider, error), 'error');
     } finally {
         testButton.disabled = false;
         testButton.classList.remove('testing');
