@@ -1,119 +1,57 @@
-const { ipcRenderer } = require('electron');
+// Elementos do DOM
+const closeButton = document.getElementById('close-button');
+const userInput = document.getElementById('user-input');
+const sendButton = document.getElementById('send-button');
+const originalCode = document.getElementById('original-code');
+const suggestedCorrections = document.getElementById('suggested-corrections');
 
-// Elementos da interface
-const chatMessages = document.getElementById('chat-messages');
-const chatInput = document.querySelector('textarea');
-const sendButton = document.querySelector('button:contains("Enviar")');
-const newCaptureButton = document.querySelector('button:contains("Nova Captura")');
-const copyButton = document.querySelector('button:contains("Copiar")');
-const applyButton = document.querySelector('button:contains("Aplicar Correção")');
-const depthSelect = document.querySelector('select');
-const contextIndicator = document.querySelector('.w-2.h-2');
-const contextStatus = document.querySelector('span:contains("Detectando")'); 
-
-// Estado global
-let isProcessing = false;
-let corrections = [];
-
-// Funções de UI
-function updateContextStatus(status, type = 'detecting') {
-    const colors = {
-        detecting: 'bg-yellow-500',
-        active: 'bg-green-500',
-        error: 'bg-red-500'
-    };
-    
-    contextIndicator.className = `w-2 h-2 rounded-full ${colors[type]}`;
-    contextStatus.textContent = status;
-}
-
-function addMessage(text, isUser = false) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
-    messageDiv.textContent = text;
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-function displayCorrections(correctionsList) {
-    const container = document.getElementById('corrections-content');
-    container.innerHTML = '';
-    
-    correctionsList.forEach((correction, index) => {
-        const element = document.createElement('div');
-        element.className = 'correction-item';
-        element.style.animationDelay = `${index * 0.1}s`;
-        element.innerHTML = correction;
-        container.appendChild(element);
-    });
-}
-
-// Event Listeners
-sendButton.addEventListener('click', () => {
-    const text = chatInput.value.trim();
-    if (text) {
-        addMessage(text, true);
-        ipcRenderer.send('send-chat-message', text);
-        chatInput.value = '';
-    }
+// Fechar janela
+closeButton.addEventListener('click', () => {
+    window.autocorrectionAPI.closeWindow();
 });
 
-chatInput.addEventListener('keypress', (e) => {
+// Enviar mensagem
+async function sendMessage() {
+    const message = userInput.value.trim();
+    if (message) {
+        // Adiciona a pergunta do usuário
+        addMessage('user', message);
+        userInput.value = '';
+
+        // Envia a mensagem e recebe a resposta
+        const response = await window.autocorrectionAPI.sendMessage(message);
+        addMessage('assistant', response);
+    }
+}
+
+// Eventos de envio
+sendButton.addEventListener('click', sendMessage);
+userInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        sendButton.click();
+        sendMessage();
     }
 });
 
-newCaptureButton.addEventListener('click', () => {
-    ipcRenderer.send('request-new-capture');
-});
+// Adicionar mensagem ao container
+function addMessage(type, content) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `p-4 rounded-lg mt-4 ${
+        type === 'user' 
+            ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' 
+            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+    }`;
+    messageDiv.textContent = content;
+    suggestedCorrections.appendChild(messageDiv);
+    messageDiv.scrollIntoView({ behavior: 'smooth' });
+}
 
-copyButton.addEventListener('click', () => {
-    // Implementar lógica de cópia
-});
-
-applyButton.addEventListener('click', () => {
-    ipcRenderer.send('apply-corrections', corrections);
-});
-
-depthSelect.addEventListener('change', (e) => {
-    ipcRenderer.send('change-depth-level', e.target.value);
-});
-
-// IPC Handlers
-ipcRenderer.on('correction-update', (event, data) => {
-    corrections = data.corrections;
-    displayCorrections(corrections);
-    updateContextStatus('Ativo', 'active');
-});
-
-ipcRenderer.on('ai-response', (event, message) => {
-    addMessage(message);
-});
-
-ipcRenderer.on('processing-status', (event, { status, type }) => {
-    updateContextStatus(status, type);
-});
-
-// Responsividade
-window.addEventListener('resize', () => {
-    const isMobile = window.innerWidth < 768;
-    const chatArea = document.getElementById('chat-area');
-    chatArea.style.display = isMobile ? 'none' : 'flex';
-});
-
-// Inicialização
-updateContextStatus('Detectando...', 'detecting');
-
-// Controles da janela
-const minimizeButton = document.querySelector('.minimize-button');
-const closeButton = document.querySelector('.close-button');
-
-minimizeButton.addEventListener('click', () => {
-    window.autocorrection.minimize();
-});
-
-closeButton.addEventListener('click', () => {
-    window.autocorrection.close();
+// Receber correções iniciais
+window.autocorrectionAPI.onCorrections((event, data) => {
+    if (data.originalText) {
+        originalCode.textContent = data.originalText;
+    }
+    if (data.corrections) {
+        addMessage('assistant', data.corrections);
+    }
 });

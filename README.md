@@ -32,6 +32,7 @@ npm install @google/generative-ai
 npm install tesseract.js
 npm install sqlite3
 npm install -D tailwindcss@3.4.1 postcss@8.4.35 autoprefixer@10.4.17
+npm install electron-store
 ```
 
 ## Como Usar

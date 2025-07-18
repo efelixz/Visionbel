@@ -1,134 +1,53 @@
-const { ipcRenderer } = require('electron');
+// Elementos do DOM
+const closeButton = document.getElementById('close-button');
+const userInput = document.getElementById('user-input');
+const sendButton = document.getElementById('send-button');
+const suggestionsContainer = document.getElementById('suggestions-container');
 
-// Elementos da interface
-const chatMessages = document.getElementById('chat-messages');
-const chatInput = document.querySelector('textarea');
-const sendButton = document.querySelector('button:contains("Enviar")');
-const newCaptureButton = document.querySelector('button:contains("Nova Captura")');
-const copyButton = document.querySelector('button:contains("Copiar")');
-const applyButton = document.querySelector('button:contains("Aplicar Sugestão")');
-const depthSelect = document.querySelector('select');
-const contextIndicator = document.querySelector('.w-2.h-2');
-const contextStatus = document.querySelector('span:contains("Detectando")');
-
-// Estado global
-let isProcessing = false;
-let suggestions = [];
-// Funções de UI
-function updateContextStatus(status, type = 'detecting') {
-    const colors = {
-        detecting: 'bg-yellow-500',
-        active: 'bg-green-500',
-        error: 'bg-red-500'
-    };
-    
-    contextIndicator.className = `w-2 h-2 rounded-full ${colors[type]}`;
-    contextStatus.textContent = status;
-}
-
-function addMessage(text, isUser = false) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
-    messageDiv.textContent = text;
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-function displaySuggestions(data) {
-    const container = document.getElementById('suggestions-content');
-    container.innerHTML = '';
-    
-    // Verifica se data é um objeto ou array
-    const suggestionsList = Array.isArray(data) ? data : [data.suggestions];
-    
-    suggestionsList.forEach((suggestion, index) => {
-        const element = document.createElement('div');
-        element.className = 'suggestion-item';
-        element.style.animationDelay = `${index * 0.1}s`;
-        element.innerHTML = suggestion;
-        container.appendChild(element);
-    });
-}
-
-// Event Listeners
-sendButton.addEventListener('click', () => {
-    const text = chatInput.value.trim();
-    if (text) {
-        addMessage(text, true);
-        window.electronAPI.sendChatMessage(text);
-        chatInput.value = '';
-    }
+// Fechar janela
+closeButton.addEventListener('click', () => {
+    window.suggestionAPI.closeSuggestionWindow();
 });
 
-chatInput.addEventListener('keypress', (e) => {
+// Enviar mensagem
+async function sendMessage() {
+    const message = userInput.value.trim();
+    if (message) {
+        // Adiciona a mensagem do usuário ao container
+        addMessageToContainer('user', message);
+        userInput.value = '';
+
+        // Envia a mensagem e recebe a resposta
+        const response = await window.suggestionAPI.sendMessage(message);
+        addMessageToContainer('assistant', response);
+    }
+}
+
+// Eventos de envio
+sendButton.addEventListener('click', sendMessage);
+userInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        sendButton.click();
+        sendMessage();
     }
 });
 
-newCaptureButton.addEventListener('click', () => {
-    window.electronAPI.requestNewCapture();
-});
+// Adicionar mensagem ao container
+function addMessageToContainer(type, content) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `p-4 rounded-lg ${
+        type === 'user' 
+            ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300' 
+            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+    }`;
+    messageDiv.textContent = content;
+    suggestionsContainer.appendChild(messageDiv);
+    messageDiv.scrollIntoView({ behavior: 'smooth' });
+}
 
-copyButton.addEventListener('click', () => {
-    if (suggestions.length > 0) {
-        window.suggestion.copySuggestion(suggestions);
+// Receber sugestões iniciais
+window.suggestionAPI.onSuggestions((event, data) => {
+    if (data.suggestions) {
+        addMessageToContainer('assistant', data.suggestions);
     }
-});
-
-applyButton.addEventListener('click', () => {
-    if (suggestions.length > 0) {
-        window.suggestion.applySuggestion(suggestions);
-    }
-});
-
-depthSelect.addEventListener('change', (e) => {
-    window.electronAPI.sendChatMessage(`/depth ${e.target.value}`);
-});
-
-// IPC Handlers
-window.suggestion.onSuggestions((data) => {
-    suggestions = data;
-    displaySuggestions(suggestions);
-    updateContextStatus('Ativo', 'active');
-});
-
-window.electronAPI.onDisplaySuggestions((event, data) => {
-    suggestions = data;
-    displaySuggestions(suggestions);
-});
-
-window.electronAPI.onSuggestionError((event, error) => {
-    updateContextStatus('Erro: ' + error, 'error');
-});
-
-window.electronAPI.onProcessingStart(() => {
-    updateContextStatus('Processando...', 'detecting');
-});
-
-window.electronAPI.onChatMessage((event, message) => {
-    addMessage(message);
-});
-
-// Responsividade
-window.addEventListener('resize', () => {
-    const isMobile = window.innerWidth < 768;
-    const chatArea = document.getElementById('chat-area');
-    chatArea.style.display = isMobile ? 'none' : 'flex';
-});
-
-// Inicialização
-updateContextStatus('Detectando...', 'detecting');
-
-// Controles da janela
-const minimizeButton = document.querySelector('.minimize-button');
-const closeButton = document.querySelector('.close-button');
-
-minimizeButton.addEventListener('click', () => {
-    window.suggestion.minimize();
-});
-
-closeButton.addEventListener('click', () => {
-    window.suggestion.close();
 });

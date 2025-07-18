@@ -21,9 +21,16 @@ let reasoningWindow = null;
 let directResponseWindow = null;
 let ethicalWindow = null;
 let floatingButtonWindow = null;
+let suggestionWindow = null;
 let isAnalysisRunning = false;
 let currentAnalysisController = null;
-const defaultSelectedMode = 'sugestao'; // Default mode for storing selected mode
+let defaultSelectedMode = 'sugestao'; // Default mode
+
+// Atualiza o modo selecionado quando alterado
+ipcMain.on('update-default-mode', async (event, mode) => {
+    defaultSelectedMode = mode;
+    updateTrayMenu();
+});
 
 // Armazenar histórico de conversa por janela
 const conversationHistories = new Map();
@@ -131,6 +138,81 @@ function updateTrayMenu() {
             type: 'separator'
         },
         {
+            label: 'Modo de Operação',
+            submenu: [
+                {
+                    label: '✨ Destaque',
+                    type: 'radio',
+                    checked: defaultSelectedMode === 'destaque',
+                    click: async () => {
+                        await settingsService.setSetting('defaultMode', 'destaque');
+                        defaultSelectedMode = 'destaque';
+                        updateTrayMenu();
+                    }
+                },
+                {
+                    label: '💡 Sugestões',
+                    type: 'radio',
+                    checked: defaultSelectedMode === 'sugestao',
+                    click: async () => {
+                        await settingsService.setSetting('defaultMode', 'sugestao');
+                        defaultSelectedMode = 'sugestao';
+                        updateTrayMenu();
+                    }
+                },
+                {
+                    label: '🤖 Auto-correção',
+                    type: 'radio',
+                    checked: defaultSelectedMode === 'autocorrecao',
+                    click: async () => {
+                        await settingsService.setSetting('defaultMode', 'autocorrecao');
+                        defaultSelectedMode = 'autocorrecao';
+                        updateTrayMenu();
+                    }
+                },
+                {
+                    label: '🧠 Raciocínio Profundo',
+                    type: 'radio',
+                    checked: defaultSelectedMode === 'raciocinio',
+                    click: async () => {
+                        await settingsService.setSetting('defaultMode', 'raciocinio');
+                        defaultSelectedMode = 'raciocinio';
+                        updateTrayMenu();
+                    }
+                },
+                {
+                    label: '🎯 Resposta Direta',
+                    type: 'radio',
+                    checked: defaultSelectedMode === 'directo',
+                    click: async () => {
+                        await settingsService.setSetting('defaultMode', 'directo');
+                        defaultSelectedMode = 'directo';
+                        updateTrayMenu();
+                    }
+                },
+                {
+                    label: '🛡️ Modo Ético',
+                    type: 'radio',
+                    checked: defaultSelectedMode === 'etico',
+                    click: async () => {
+                        await settingsService.setSetting('defaultMode', 'etico');
+                        defaultSelectedMode = 'etico';
+                        updateTrayMenu();
+                    }
+                },
+                {
+                    label: '👤 Modo Shadow',
+                    type: 'radio',
+                    checked: defaultSelectedMode === 'shadow',
+                    click: async () => {
+                        await settingsService.setSetting('defaultMode', 'shadow');
+                        defaultSelectedMode = 'shadow';
+                        updateTrayMenu();
+                    }
+                }
+            ]
+        },
+        {
             label: 'Captura Rápida',
             type: 'checkbox',
             checked: quickCaptureEnabled,
@@ -196,15 +278,6 @@ function updateTrayMenu() {
                     resizable: true
                 });
                 settingsWindow.loadFile('src/settings-window/index.html');
-            }
-        },
-        {
-            type: 'separator'
-        },
-        {
-            label: 'Sair',
-            click: () => {
-                app.quit();
             }
         }
     ]);
@@ -272,10 +345,6 @@ function createMainWindow() {
  * @param {string} mode - O modo de operação ('directo', 'etico', 'shadow', 'sugestao', 'destaque').
  * @returns {Promise<{result: string|null, rect: object|null}>} A resposta final da IA e o retângulo de captura.
  */
-/**
- * MODIFICADO: Função com controle de cancelamento
- */
-// Adicione estes handlers após os outros ipcMain.handle existentes
 
 ipcMain.handle('get-api-settings', async () => {
     const storeInstance = await settingsService.initStore();
@@ -333,29 +402,15 @@ function createThinkingWindow(capturedRect) {
         alwaysOnTop: true,
         skipTaskbar: true,
         resizable: false,
-        movable: true, // Permite movimentação
+        movable: true,
         webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, '../thinking-window/preload.js')
         }
     });
     
     thinkingWindow.loadFile('src/thinking-window/index.html');
-    
-    // Handler para mover a janela via IPC
-    const moveHandler = (event, { x, y }) => {
-        if (thinkingWindow && !thinkingWindow.isDestroyed()) {
-            thinkingWindow.setPosition(x, y);
-        }
-    };
-    
-    // Adiciona o listener
-    ipcMain.on('move-thinking-window', moveHandler);
-    
-    // Remove o listener quando a janela for fechada
-    thinkingWindow.on('closed', () => {
-        ipcMain.removeListener('move-thinking-window', moveHandler);
-    });
     
     return thinkingWindow;
 }
@@ -615,7 +670,7 @@ async function executeFullCaptureFlow(mode) {
             const x = Math.floor((screenWidth - windowWidth) / 2);
             const y = Math.floor((screenHeight - windowHeight) / 2);
             
-            const suggestionWindow = new BrowserWindow({
+            suggestionWindow = new BrowserWindow({
                 x: x,
                 y: y,
                 width: windowWidth,
@@ -633,13 +688,10 @@ async function executeFullCaptureFlow(mode) {
                 webPreferences: {
                     preload: path.join(__dirname, '../suggestion-window/preload.js'),
                     contextIsolation: true,
-                    devTools: true
                 }
             });
 
             suggestionWindow.loadFile('src/suggestion-window/index.html');
-            suggestionWindow.webContents.openDevTools();
-
             suggestionWindow.webContents.on('did-finish-load', () => {
                 const windowId = suggestionWindow.id;
                 
@@ -804,27 +856,26 @@ async function executeFullCaptureFlow(mode) {
             });
 
             reasoningWindow.loadFile('src/reasoning-window/index.html');
-            reasoningWindow.webContents.openDevTools(); // Abre DevTools automaticamente
 
             reasoningWindow.webContents.on('did-finish-load', () => {
-                const windowId = reasoningWindow.id;
-                
-                originalCapturedTexts.set(windowId, text);
-                
-                if (!conversationHistories.has(windowId)) {
-                    conversationHistories.set(windowId, []);
-                }
-                const history = conversationHistories.get(windowId);
-                
-                history.push(`Texto capturado: "${text}"`);
-                history.push(aiResponseText);
-                
-                reasoningWindow.webContents.send('send-suggestions', { 
-                    suggestions: aiResponseText, 
-                    mode: mode,
-                    originalText: text,
-                    hasInitialContext: true
-                });
+        const windowId = reasoningWindow.id;
+        
+        originalCapturedTexts.set(windowId, text);
+        
+        if (!conversationHistories.has(windowId)) {
+            conversationHistories.set(windowId, []);
+        }
+        const history = conversationHistories.get(windowId);
+        
+        history.push(`Texto capturado: "${text}"`);
+        history.push(aiResponseText);
+        
+        reasoningWindow.webContents.send('send-analysis', { 
+            analysis: aiResponseText, 
+            mode: mode,
+            originalText: text,
+            hasInitialContext: true
+        });
             });
         }
         else if (mode === 'directo' && capturedRect) {
@@ -855,13 +906,12 @@ async function executeFullCaptureFlow(mode) {
                 maxWidth: screenWidth,
                 maxHeight: screenHeight,
                 webPreferences: {
-                    preload: path.join(__dirname, '../direct-response-window/preload.js'),
+                    preload: path.join(__dirname, '../direct-window/preload.js'),
                     contextIsolation: true,
                 }
             });
 
-            directResponseWindow.loadFile('src/direct-response-window/index.html');
-            directResponseWindow.webContents.openDevTools(); // Abre DevTools automaticamente
+            directResponseWindow.loadFile('src/direct-window/index.html');
 
             directResponseWindow.webContents.on('did-finish-load', () => {
                 const windowId = directResponseWindow.id;
@@ -876,8 +926,8 @@ async function executeFullCaptureFlow(mode) {
                 history.push(`Texto capturado: "${text}"`);
                 history.push(aiResponseText);
                 
-                directResponseWindow.webContents.send('send-suggestions', { 
-                    suggestions: aiResponseText, 
+                directResponseWindow.webContents.send('send-response', { 
+                    response: aiResponseText, 
                     mode: mode,
                     originalText: text,
                     hasInitialContext: true
@@ -918,10 +968,65 @@ async function executeFullCaptureFlow(mode) {
             });
 
             ethicalWindow.loadFile('src/ethical-window/index.html');
-            ethicalWindow.webContents.openDevTools(); // Abre DevTools automaticamente
 
             ethicalWindow.webContents.on('did-finish-load', () => {
-                const windowId = ethicalWindow.id;
+    const windowId = ethicalWindow.id;
+    
+    originalCapturedTexts.set(windowId, text);
+    
+    if (!conversationHistories.has(windowId)) {
+        conversationHistories.set(windowId, []);
+    }
+    const history = conversationHistories.get(windowId);
+    
+    history.push(`Texto capturado: "${text}"`);
+    history.push(aiResponseText);
+    
+    ethicalWindow.webContents.send('send-guidance', { 
+        guidance: aiResponseText, 
+        mode: mode,
+        originalText: text,
+        hasInitialContext: true
+    });
+});
+        }
+        else if (mode === 'teste' && capturedRect) {
+            if (thinkingWindow && !thinkingWindow.isDestroyed()) {
+                thinkingWindow.close();
+            }
+            
+            const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+            const windowWidth = Math.min(Math.max(Math.floor(screenWidth * 0.4), 450), 600);
+            const windowHeight = Math.min(Math.max(Math.floor(screenHeight * 0.5), 400), 700);
+            
+            const x = Math.floor((screenWidth - windowWidth) / 2);
+            const y = Math.floor((screenHeight - windowHeight) / 2);
+            
+            testWindow = new BrowserWindow({
+                x: x,
+                y: y,
+                width: windowWidth,
+                height: windowHeight,
+                frame: false,
+                transparent: true,
+                alwaysOnTop: true,
+                skipTaskbar: true,
+                resizable: true,
+                movable: true,
+                minWidth: 400,
+                minHeight: 300,
+                maxWidth: screenWidth,
+                maxHeight: screenHeight,
+                webPreferences: {
+                    preload: path.join(__dirname, '../test-window/preload.js'),
+                    contextIsolation: true,
+                }
+            });
+
+            testWindow.loadFile('src/test-window/index.html');
+
+            testWindow.webContents.on('did-finish-load', () => {
+                const windowId = testWindow.id;
                 
                 originalCapturedTexts.set(windowId, text);
                 
@@ -933,16 +1038,73 @@ async function executeFullCaptureFlow(mode) {
                 history.push(`Texto capturado: "${text}"`);
                 history.push(aiResponseText);
                 
-                ethicalWindow.webContents.send('send-suggestions', { 
+                testWindow.webContents.send('send-suggestions', { 
                     suggestions: aiResponseText, 
                     mode: mode,
                     originalText: text,
                     hasInitialContext: true
                 });
             });
+        }
             
-            responseWindow.on('closed', () => {
-                const windowId = responseWindow.id;
+        else if (mode === 'teste' && capturedRect) {
+            if (thinkingWindow && !thinkingWindow.isDestroyed()) {
+                thinkingWindow.close();
+            }
+            
+            const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+            const windowWidth = Math.min(Math.max(Math.floor(screenWidth * 0.4), 450), 600);
+            const windowHeight = Math.min(Math.max(Math.floor(screenHeight * 0.5), 400), 700);
+            
+            const x = Math.floor((screenWidth - windowWidth) / 2);
+            const y = Math.floor((screenHeight - windowHeight) / 2);
+            
+            testWindow = new BrowserWindow({
+                x: x,
+                y: y,
+                width: windowWidth,
+                height: windowHeight,
+                frame: false,
+                transparent: true,
+                alwaysOnTop: true,
+                skipTaskbar: true,
+                resizable: true,
+                movable: true,
+                minWidth: 400,
+                minHeight: 300,
+                maxWidth: screenWidth,
+                maxHeight: screenHeight,
+                webPreferences: {
+                    preload: path.join(__dirname, '../test-window/preload.js'),
+                    contextIsolation: true,
+                }
+            });
+
+            testWindow.loadFile('src/test-window/index.html');
+
+            testWindow.webContents.on('did-finish-load', () => {
+                const windowId = testWindow.id;
+                
+                originalCapturedTexts.set(windowId, text);
+                
+                if (!conversationHistories.has(windowId)) {
+                    conversationHistories.set(windowId, []);
+                }
+                const history = conversationHistories.get(windowId);
+                
+                history.push(`Texto capturado: "${text}"`);
+                history.push(aiResponseText);
+                
+                testWindow.webContents.send('send-suggestions', { 
+                    suggestions: aiResponseText, 
+                    mode: mode,
+                    originalText: text,
+                    hasInitialContext: true
+                });
+            });
+
+            testWindow.on('closed', () => {
+                const windowId = testWindow.id;
                 // Limpa o histórico da conversa e o texto original
                 conversationHistories.delete(windowId);
                 originalCapturedTexts.delete(windowId);
@@ -1114,12 +1276,12 @@ app.whenReady().then(() => {
 
     // Atalho global mantido
 globalShortcut.register('CommandOrControl+Shift+X', async () => {
-    console.log(`Atalho global ativado no modo: ${selectedMode}!`);
-    const { result: finalResponse } = await executeFullCaptureFlow(selectedMode); // <- CORRIGIDO
+    console.log(`Atalho global ativado no modo: ${defaultSelectedMode}!`);
+    const { result: finalResponse } = await executeFullCaptureFlow(defaultSelectedMode);
     
     if (finalResponse && finalResponse !== '(Observado no Modo Shadow)' && finalResponse !== 'Captura cancelada.' && finalResponse !== 'Nenhum texto encontrado.') {
         const notification = new Notification({
-            title: `Visionbel™ ${selectedMode.charAt(0).toUpperCase() + selectedMode.slice(1)}`,
+            title: `Visionbel™ ${defaultSelectedMode.charAt(0).toUpperCase() + defaultSelectedMode.slice(1)}`,
             body: 'Análise concluída!',
             silent: true
         });
@@ -1246,26 +1408,54 @@ ipcMain.on('apply-fix', async (event, codeToType) => {
     }
 });
 
-// Handler para minimizar a janela de sugestões
-ipcMain.on('minimize-suggestion-window', (event) => {
+// Generic window action handler
+ipcMain.on('window-action', (event, { action }) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (win && !win.isDestroyed()) {
-        win.minimize();
+        win[action]();
     }
 });
 
-// Handler para fechar a janela de sugestões (separado do minimizar)
-ipcMain.on('close-suggestion-window', (event) => {
-    const currentWindow = BrowserWindow.fromWebContents(event.sender);
-    const windowId = currentWindow.id;
-    
-    // Remove o histórico da conversa e o texto original
-    conversationHistories.delete(windowId);
-    originalCapturedTexts.delete(windowId);
-    
-    if (currentWindow && !currentWindow.isDestroyed()) {
-        console.log('Fechando janela de sugestões'); // Debug
-        currentWindow.close();
+// Generic message handler
+ipcMain.handle('window-message', async (event, { type, message }) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return;
+
+    const windowId = win.id;
+    let response;
+
+    try {
+        // Get conversation history
+        if (!conversationHistories.has(windowId)) {
+            conversationHistories.set(windowId, []);
+        }
+        const history = conversationHistories.get(windowId);
+        
+        // Get original text if available
+        const originalText = originalCapturedTexts.get(windowId) || '';
+        
+        // Create AI context
+        let contextForAI = message;
+        if (originalText && history.length <= 5) {
+            contextForAI = `Original context: "${originalText}"\n\nRequest: ${message}`;
+        }
+        
+        // Get AI response based on window type
+        response = await aiService.getAIResponse({
+            text: contextForAI,
+            mode: type,
+            conversationHistory: history,
+            signal: null
+        });
+        
+        // Update history
+        history.push(message);
+        history.push(response);
+        
+        return response;
+    } catch (error) {
+        console.error(`Error processing ${type} message:`, error);
+        throw error;
     }
 });
 
@@ -1356,9 +1546,53 @@ ipcMain.on('toggle-assistant-window', () => {
 });
 
 // Adicionar após os outros handlers IPC (por volta da linha 700)
-let selectedMode = 'sugestao'; // Variável para armazenar o modo selecionado
 
+// Atualiza o modo selecionado quando alterado
+ipcMain.on('update-default-mode', async (event, mode) => {
+    defaultSelectedMode = mode;
+    updateTrayMenu();
+});
 
+let testWindow = null;
+
+function createTestWindow() {
+    // Obtém as dimensões da tela
+    const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+    
+    // Calcula a posição central
+    const x = Math.floor((screenWidth - 400) / 2);
+    const y = Math.floor((screenHeight - 300) / 2);
+    
+    testWindow = new BrowserWindow({
+        x: x,
+        y: y,
+        width: 400,
+        height: 300,
+        frame: false,
+        transparent: true,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, '../test-window/preload.js')
+        }
+    });
+
+    testWindow.loadFile('src/test-window/index.html');
+}
+
+// Função genérica para gerenciar janelas
+function handleWindowAction(event, action) {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win) {
+        win[action]();
+    }
+}
+
+// Handlers unificados
+ipcMain.on('minimize-window', (event) => handleWindowAction(event, 'minimize'));
+ipcMain.on('close-window', (event) => handleWindowAction(event, 'close'));
 
 // Handler para definir posição da janela flutuante
 ipcMain.on('set-floating-position', (event, { x, y }) => {
@@ -1523,30 +1757,133 @@ ipcMain.handle('send-chat-message', async (event, prompt) => {
     }
 });
 
-// Handlers para controles da janela de autocorreção
-ipcMain.on('minimize-autocorrection-window', (event) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (win) {
-        win.minimize();
+// Handler para mensagens da janela de resposta direta
+ipcMain.handle('send-direct-message', async (event, message) => {
+    const currentWindow = BrowserWindow.fromWebContents(event.sender);
+    const windowId = currentWindow.id;
+    
+    try {
+        // Obtém o histórico da conversa
+        if (!conversationHistories.has(windowId)) {
+            conversationHistories.set(windowId, []);
+        }
+        const history = conversationHistories.get(windowId);
+        
+        // Adiciona a nova mensagem do usuário ao histórico
+        history.push(message);
+        
+        // Obtém o texto original se disponível
+        const originalText = originalCapturedTexts.get(windowId) || '';
+        
+        // Cria um contexto mais completo para a IA
+        let contextForAI = message;
+        if (originalText && history.length <= 5) {
+            contextForAI = `Contexto original: "${originalText}"\n\nSolicitação: ${message}`;
+        }
+        
+        // Usar o serviço de IA com contexto completo
+        const response = await aiService.getAIResponse({
+            text: contextForAI,
+            mode: 'directo',
+            conversationHistory: history,
+            signal: null
+        });
+        
+        // Adiciona a resposta da IA ao histórico
+        history.push(response);
+        
+        return response;
+    } catch (error) {
+        console.error('Erro ao processar mensagem direta:', error);
+        throw error;
     }
 });
 
-ipcMain.on('close-autocorrection-window', (event) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (win) {
-        win.close();
+
+
+// Handler para mensagens éticas
+ipcMain.handle('send-ethical-message', async (event, message) => {
+    const currentWindow = BrowserWindow.fromWebContents(event.sender);
+    const windowId = currentWindow.id;
+    
+    try {
+        // Obtém o histórico da conversa
+        if (!conversationHistories.has(windowId)) {
+            conversationHistories.set(windowId, []);
+        }
+        const history = conversationHistories.get(windowId);
+        
+        // Adiciona a nova mensagem do usuário ao histórico
+        history.push(message);
+        
+        // Obtém o texto original se disponível
+        const originalText = originalCapturedTexts.get(windowId) || '';
+        
+        // Cria um contexto mais completo para a IA
+        let contextForAI = message;
+        if (originalText && history.length <= 5) {
+            contextForAI = `Contexto original: "${originalText}"\n\nSolicitação: ${message}`;
+        }
+        
+        // Usar o serviço de IA com contexto completo
+        const response = await aiService.getAIResponse({
+            text: contextForAI,
+            mode: 'etico',
+            conversationHistory: history,
+            signal: null
+        });
+        
+        // Adiciona a resposta da IA ao histórico
+        history.push(response);
+        
+        return response;
+    } catch (error) {
+        console.error('Erro ao processar mensagem ética:', error);
+        throw error;
     }
 });
 
-
-
-// Add these handlers after the other ipcMain.handle declarations
-ipcMain.handle('set-mode', async (event, mode) => {
-    selectedMode = mode;
-    console.log('Mode updated:', mode);
-    return mode;
+// Handlers para fechar janelas
+ipcMain.on('close-ethical-window', () => {
+    if (ethicalWindow && !ethicalWindow.isDestroyed()) {
+        ethicalWindow.close();
+    }
 });
 
-ipcMain.handle('get-selected-mode', async () => {
-    return selectedMode;
+ipcMain.on('close-autocorrection-window', () => {
+    if (autocorrectionWindow && !autocorrectionWindow.isDestroyed()) {
+        autocorrectionWindow.close();
+    }
+});
+
+ipcMain.on('close-reasoning-window', () => {
+    if (reasoningWindow && !reasoningWindow.isDestroyed()) {
+        reasoningWindow.close();
+    }
+});
+
+ipcMain.on('close-direct-window', () => {
+    if (directResponseWindow && !directResponseWindow.isDestroyed()) {
+        directResponseWindow.close();
+    }
+});
+
+ipcMain.on('close-suggestion-window', () => {
+    if (suggestionWindow && !suggestionWindow.isDestroyed()) {
+        suggestionWindow.close();
+    }
+});
+
+ipcMain.on('close-thinking-window', () => {
+    if (thinkingWindow && !thinkingWindow.isDestroyed()) {
+        thinkingWindow.close();
+    }
+});
+
+// Handler genérico para ações de janela
+ipcMain.on('window-action', (event, { action }) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win && !win.isDestroyed()) {
+        win[action]();
+    }
 });

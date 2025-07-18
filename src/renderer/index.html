@@ -25,10 +25,6 @@
                 </div>
             </div>
             <div class="flex flex-wrap gap-2">
-                <button id="themeToggle" class="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors duration-200" title="Alternar Tema">
-                    <span class="dark:hidden text-sm sm:text-base">🌙</span>
-                    <span class="hidden dark:inline text-sm sm:text-base">☀️</span>
-                </button>
                 <button id="historyBtn" class="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors duration-200" title="Ver Histórico">
                     <span class="text-sm sm:text-base">📊</span>
                     <span class="hidden sm:inline text-xs sm:text-sm font-medium">Histórico</span>
@@ -132,6 +128,17 @@
                             <div class="min-w-0">
                                 <span class="font-semibold text-gray-900 dark:text-white block text-sm sm:text-base">Modo Shadow</span>
                                 <span class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 leading-tight">Observação silenciosa</span>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="group relative p-3 sm:p-4 bg-white dark:bg-gray-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg cursor-pointer border-2 border-gray-200 dark:border-gray-600 hover:border-yellow-300 dark:hover:border-yellow-600 has-[:checked]:border-yellow-500 dark:has-[:checked]:border-yellow-400 has-[:checked]:bg-yellow-50 dark:has-[:checked]:bg-yellow-900/30 transition-all duration-200">
+                        <input type="radio" name="mode" value="teste" class="hidden">
+                        <div class="flex items-start gap-2 sm:gap-3">
+                            <span class="text-lg sm:text-xl flex-shrink-0">🧪</span>
+                            <div class="min-w-0">
+                                <span class="font-semibold text-gray-900 dark:text-white block text-sm sm:text-base">Modo Teste</span>
+                                <span class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 leading-tight">Ambiente de testes</span>
                             </div>
                         </div>
                     </label>

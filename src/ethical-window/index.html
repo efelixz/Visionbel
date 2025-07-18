@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sugestões - Visionbel</title>
+    <title>Modo Ético - Visionbel</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles/output.css">
     <link rel="stylesheet" href="style.css">
@@ -12,7 +12,10 @@
     <div class="flex flex-col h-screen">
         <!-- Barra de título personalizada -->
         <div class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-            <h1 class="text-lg font-semibold">Sugestões</h1>
+            <div class="flex items-center gap-2">
+                <span class="text-xl">🛡️</span>
+                <h1 class="text-lg font-semibold">Modo Ético</h1>
+            </div>
             <button id="close-button" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -22,14 +25,27 @@
 
         <!-- Conteúdo principal -->
         <div class="flex-1 overflow-auto p-4">
-            <div id="suggestions-container" class="space-y-4"></div>
+            <div id="ethical-container" class="space-y-4">
+                <!-- Contexto Original -->
+                <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
+                    <h2 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contexto:</h2>
+                    <div id="original-context" class="text-sm"></div>
+                </div>
+                <!-- Orientação Ética -->
+                <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4">
+                    <h2 class="text-sm font-medium text-indigo-700 dark:text-indigo-300 mb-2">Orientação:</h2>
+                    <div id="ethical-guidance" class="space-y-4">
+                        <!-- Seções de orientação serão inseridas aqui -->
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Área de interação -->
         <div class="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
             <div class="flex gap-2">
-                <input type="text" id="user-input" class="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm" placeholder="Digite sua pergunta...">
-                <button id="send-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
+                <input type="text" id="user-input" class="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm" placeholder="Faça uma pergunta sobre a orientação...">
+                <button id="send-button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
                     Enviar
                 </button>
             </div>
