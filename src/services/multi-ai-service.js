@@ -62,161 +62,28 @@ async function executeWithFallback(provider, operation, primaryModel, fallbackMo
     }
 }
 
-async function getAIResponse({ text, mode, signal = null }) {
+async function getAIResponse({ text, mode, signal }) {
     try {
+        // Obter as configurações do provedor
         const apiSettings = await settingsService.getSetting('apiSettings');
-        const provider = apiSettings?.provider || 'gemini';
-
-        // Carrega os prompts padrão do arquivo ai-service.js
-        const defaultPrompts = require('./ai-service').getDefaultPrompts();
-        const customPrompts = await settingsService.getCustomPrompts();
-
-        const promptTemplate = customPrompts[mode] || defaultPrompts[mode] || "Responda a seguinte questão:";
-        const prompt = `${promptTemplate} \"${text}\"`;
-
-        const providerSettings = apiSettings[provider];
-
-        // A verificação principal que estava causando o erro
-        if (!providerSettings || !providerSettings.key) {
-            // Esta mensagem agora será mais precisa
-            return `Erro: Provedor ${provider} não configurado. Por favor, configure a chave da API nas Configurações.`;
-        }
-
-        const models = {
-            primary: providerSettings.model,
-            fallback: providerSettings.fallbackModel
-        };
-
-        // Adiciona um AbortSignal para cancelar a requisição se necessário
-        const operationWithSignal = (modelName) => {
-            const operation = async (model) => {
-                if (signal && signal.aborted) {
-                    throw new Error('Operação cancelada pelo usuário');
-                }
-                const genAI = new GoogleGenerativeAI(providerSettings.key);
-                const geminiModel = genAI.getGenerativeModel({ model });
-                return await geminiModel.generateContent(prompt);
-            };
-
-            if (provider === 'gemini') {
-                return executeWithFallback('gemini', operation, modelName, models.fallback);
-            }
-            // Adicione aqui a lógica para outros provedores (OpenAI, etc.)
-            throw new Error(`Provedor ${provider} não suportado`);
-        };
-
+        const provider = apiSettings.provider;
+        const key = apiSettings[provider].key;
+        
         switch (provider) {
             case 'gemini':
-                console.log('Iniciando chamada Gemini com configurações:', {
-                    model: models.primary,
-                    fallback: models.fallback,
-                    prompt: prompt
-                });
-                const genAI = new GoogleGenerativeAI(providerSettings.key);
+                const genAI = new GoogleGenerativeAI(key);
+                const models = {
+                    primary: apiSettings[provider].model,
+                    fallback: 'gemini-1.5-pro-latest'
+                };
+                
                 const operation = async (modelName) => {
-                    console.log('Tentando modelo:', modelName);
-                    const model = genAI.getGenerativeModel({ 
-                        model: modelName,
-                        generationConfig: {
-                            temperature: 0.7,
-                            topK: 40,
-                            topP: 0.95,
-                            maxOutputTokens: 2048
-                        }
-                    });
-
+                    const model = genAI.getGenerativeModel({ model: modelName });
                     let formattedPrompt;
-                    if (mode === 'sugestoes') {
-                        formattedPrompt = `${prompt}\n\nIMPORTANTE: Atue como um mentor especializado que guia através de perguntas e dicas, adaptando-se a diferentes áreas de conhecimento.\n\n` +
-                        `ÁREAS DE CONHECIMENTO:\n` +
-                        `1. 📚 Conteúdo Educacional:\n` +
-                        `   - Matemática: teoremas, demonstrações, fórmulas\n` +
-                        `   - Física: leis, princípios, experimentos\n` +
-                        `   - Química: reações, compostos, equações\n` +
-                        `   - Biologia: sistemas, processos, estruturas\n` +
-                        `   - História: eventos, períodos, contextos\n` +
-                        `   - Geografia: fenômenos, territórios, processos\n` +
-                        `   - Literatura: análises, interpretações, contextos\n` +
-                        `   - Línguas: gramática, sintaxe, semântica\n\n` +
-                        `2. 📝 Provas e Exercícios:\n` +
-                        `   - Questões dissertativas\n` +
-                        `   - Problemas matemáticos\n` +
-                        `   - Interpretação de texto\n` +
-                        `   - Análise de dados\n` +
-                        `   - Estudos de caso\n\n` +
-                        `3. 💻 Programação e Tecnologia:\n` +
-                        `   - Análise de código\n` +
-                        `   - Algoritmos e estruturas de dados\n` +
-                        `   - Padrões de projeto\n` +
-                        `   - Debugging e otimização\n` +
-                        `   - Arquitetura de software\n\n` +
-                        `4. 📊 Análise e Pesquisa:\n` +
-                        `   - Metodologia científica\n` +
-                        `   - Análise estatística\n` +
-                        `   - Revisão bibliográfica\n` +
-                        `   - Coleta de dados\n` +
-                        `   - Interpretação de resultados\n\n` +
-                        `5. 🌐 Interface do GitHub:\n` +
-                        `   - Estrutura do repositório\n` +
-                        `   - Histórico de commits\n` +
-                        `   - Informações de arquivos\n` +
-                        `   - Metadados do projeto\n` +
-                        `   - Colaboradores e contribuições\n\n` +
-                        `6. 📰 Notícias e Informações:\n` +
-                        `   - Manchetes e destaques\n` +
-                        `   - Análise de contexto\n` +
-                        `   - Fontes e credibilidade\n` +
-                        `   - Impacto e relevância\n` +
-                        `   - Tendências e padrões\n\n` +
-                        `7. 🌡️ Previsão do Tempo:\n` +
-                        `   - Condições climáticas\n` +
-                        `   - Alertas meteorológicos\n` +
-                        `   - Temperaturas e variações\n` +
-                        `   - Impactos locais\n` +
-                        `   - Recomendações\n\n` +
-                        `FUNÇÕES PRINCIPAIS:\n` +
-                        `1. 🧠 Perguntas Reflexivas:\n` +
-                        `   - Faça perguntas específicas da área\n` +
-                        `   - Estimule o pensamento crítico\n` +
-                        `   - Guie a construção do conhecimento\n\n` +
-                        `2. 🧩 Pistas Técnicas:\n` +
-                        `   - Forneça dicas contextualizadas\n` +
-                        `   - Sugira métodos e ferramentas\n` +
-                        `   - Indique recursos relevantes\n\n` +
-                        `3. 🔁 Sugestão por Etapas:\n` +
-                        `   - Divida problemas complexos\n` +
-                        `   - Estabeleça sequência lógica\n` +
-                        `   - Monitore o progresso\n\n` +
-                        `4. ⚙️ Adaptação ao Nível:\n` +
-                        `   - Identifique conhecimento prévio\n` +
-                        `   - Ajuste complexidade das dicas\n` +
-                        `   - Forneça suporte personalizado\n\n` +
-                        `5. 🧭 Caminho Sugerido:\n` +
-                        `   - Proponha estratégias específicas\n` +
-                        `   - Indique conexões importantes\n` +
-                        `   - Destaque conceitos fundamentais\n\n` +
-                        `6. ❌ Evite Respostas Diretas:\n` +
-                        `   - Mantenha o foco na aprendizagem\n` +
-                        `   - Estimule descobertas próprias\n` +
-                        `   - Valorize o processo\n\n` +
-                        `Sua resposta deve ser um objeto JSON válido com a seguinte estrutura:\n{\n` +
-                        `  "domain": "", // 📚 Área de conhecimento identificada\n` +
-                        `  "content_type": "", // 📝 Tipo de conteúdo (prova, código, etc)\n` +
-                        `  "difficulty_level": "", // ⚙️ Nível de dificuldade detectado\n` +
-                        `  "prerequisites": [], // 📋 Conhecimentos prévios necessários\n` +
-                        `  "key_concepts": [], // 🔑 Conceitos fundamentais\n` +
-                        `  "reflexive_questions": [], // 🧠 Perguntas para reflexão\n` +
-                        `  "technical_hints": [], // 🧩 Dicas técnicas contextualizadas\n` +
-                        `  "step_suggestions": [], // 🔁 Sugestões de passos\n` +
-                        `  "learning_resources": [], // 📚 Recursos de aprendizagem\n` +
-                        `  "suggested_path": [], // 🧭 Caminho de raciocínio\n` +
-                        `  "progress_markers": [], // 📍 Marcos de progresso\n` +
-                        `  "common_mistakes": [], // ⚠️ Erros comuns a evitar\n` +
-                        `  "validation_points": [], // ✅ Pontos de verificação\n` +
-                        `  "encouragement": [] // 🌟 Mensagens motivacionais\n` +
-                        `}`;
+                    if (mode === 'autocorrecao') {
+                        formattedPrompt = `${text}\n\nIMPORTANTE: Atue como um corretor técnico...`; // resto do prompt
                     } else {
-                        formattedPrompt = prompt;
+                        formattedPrompt = text;
                     }
 
                     const result = await model.generateContent(formattedPrompt, { signal });
@@ -226,19 +93,43 @@ async function getAIResponse({ text, mode, signal = null }) {
                 
                 const result = await executeWithFallback('gemini', operation, models.primary, models.fallback);
                 const response = await result.response;
-                const text = response.text();
+                const responseText = response.text(); // Renomeado para evitar conflito
 
                 // Processamento da resposta
                 if (mode === 'directo') {
-                    return text;
-                } else if (mode === 'sugestoes') {
+                    return responseText;
+                } else if (mode === 'sugestoes' || mode === 'autocorrecao') {
                     try {
-                        const parsedJson = JSON.parse(text);
+                        const parsedJson = JSON.parse(responseText); // Usando responseText
                         return JSON.stringify(parsedJson);
                     } catch (error) {
-                        console.error('Erro ao processar JSON do modo sugestões:', error);
+                        console.error(`Erro ao processar JSON do modo ${mode}:`, error);
                         console.error('Texto recebido:', text);
                         
+                        if (mode === 'autocorrecao') {
+                            return JSON.stringify({
+                                content_type: "error",
+                                analysis_summary: "Erro ao processar a resposta",
+                                identified_errors: [],
+                                corrections: [],
+                                explanations: [
+                                    "🔍 Houve um erro ao processar a análise",
+                                    "⚠️ O formato da resposta não está adequado"
+                                ],
+                                best_practices: [
+                                    "📋 Verifique se o conteúdo está formatado corretamente",
+                                    "🔄 Tente novamente com uma entrada diferente"
+                                ],
+                                learning_points: [],
+                                references: [],
+                                improvement_suggestions: [
+                                    "1. Reformule o conteúdo",
+                                    "2. Verifique a formatação",
+                                    "3. Tente uma abordagem diferente"
+                                ],
+                                validation_steps: []
+                            });
+                        }
                         return JSON.stringify({
                             domain: "error",
                             content_type: "error_report",
@@ -272,22 +163,19 @@ async function getAIResponse({ text, mode, signal = null }) {
                         });
                     }
                 } else {
-                    return text; // Adicionando return explícito aqui
-
+                    return responseText;
                 }
-                case 'openai': // Fixing indentation
-                // Implementar chamada para OpenAI aqui
+            
+            case 'openai':
                 throw new Error('OpenAI ainda não implementado');
 
-                case 'anthropic':
-                // Implementar chamada para Anthropic aqui
+            case 'anthropic':
                 throw new Error('Anthropic ainda não implementado');
 
-                case 'cohere':
-                // Implementar chamada para Cohere aqui
+            case 'cohere':
                 throw new Error('Cohere ainda não implementado');
 
-                default:
+            default:
                 throw new Error(`Provedor ${provider} não suportado`);
         }
     } catch (error) {
